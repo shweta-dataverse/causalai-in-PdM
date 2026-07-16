@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Data (downloaded via scripts/download_data.sh)
+data/**
+!data/**/
+!data/**/.gitkeep
+
+# Notebook checkpoints
+.ipynb_checkpoints/

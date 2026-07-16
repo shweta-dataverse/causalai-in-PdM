@@ -1,0 +1,17 @@
+# Core analysis
+numpy>=1.26
+pandas>=2.2
+scipy>=1.12
+statsmodels>=0.14
+scikit-learn>=1.4
+networkx>=3.2
+
+# Visualisation
+matplotlib>=3.8
+seaborn>=0.13
+
+# Notebooks
+jupyter>=1.0
+nbformat>=5.9
+nbconvert>=7.14
+ipykernel>=6.29
