@@ -47,20 +47,21 @@ datasets' primary documentation. Nothing here is opinion-based.
 
 ## 4. Key risks per dataset (from the focused EDA)
 
-**causRCA**
+## causRCA
+
 - Event-log format requires a resampling design decision (grid frequency, forward-fill) — implemented and demonstrated in notebook 01.
 - 81 of 92 variables are boolean/categorical → PCMCI needs mixed-data conditional-independence tests (e.g. `CMIsymb`, regression-based CI), not default `ParCorr`.
 - Authors document that OPC UA timestamps are publish times → sub-second cross-variable ordering not guaranteed.
 - Injection labels mark the start of the fault *script*; the signal-level change follows within 2–62 s (median 32 s) → treat `cause_start_at` as a window start.
 - Published July 2025: no established external baselines yet (risk for comparability, opportunity for novelty).
-
 **C-MAPSS**
+
 - Simulated: fleet variation comes from seeded initial wear; kind to methods, less kind to claims about real-world validity.
 - Degradation trend acts as a slowly-moving latent confounder for all sensors (non-stationarity confirmed by ADF tests; first differences stationary).
 - 6/21 sensors constant in FD001; strong correlation blocks → dense/unstable discovered graphs without dimensionality reduction.
 - No causal ground truth of any kind: discovery, RCA, interventions and counterfactuals can be *demonstrated* but never *scored*.
-
 **SCANIA Component X**
+
 - Anonymisation (names, value scales, times, repair frequencies all perturbed) removes interpretability — fatal for the XAI and recommendation stages.
 - Median 43 readouts per vehicle with highly irregular gaps → temporal causal discovery underpowered.
 - Extreme class imbalance (97.3% healthy in validation) and 1.1 M-row scale slow thesis iteration.
@@ -85,7 +86,7 @@ datasets' primary documentation. Nothing here is opinion-based.
 ## 6. Citations
 
 - Mehling, C. W., Pieper, S., Lüke, T. (2025). causRCA: Real-World Dataset for Causal Discovery
-  and Root Cause Analysis in Machinery (v1.0.0). Zenodo. https://doi.org/10.5281/zenodo.15876410
+  and Root Cause Analysis in Machinery (v1.0.0). Zenodo. <https://doi.org/10.5281/zenodo.15876410>
 - Mehling, C. W. et al. (2025). Enabling Joint Benchmarking of Automated Root Cause Analysis and
   Causal Discovery in Manufacturing Using the causRCA Dataset. Procedia CIRP.
 - Saxena, A., Goebel, K. (2008). Turbofan Engine Degradation Simulation Data Set. NASA Ames
@@ -94,6 +95,6 @@ datasets' primary documentation. Nothing here is opinion-based.
   Engine Run-to-Failure Simulation. PHM08.
 - Kharazian, Z., Lindgren, T., Magnússon, S., Steinert, O., Andersson Reyna, O. (2025). SCANIA
   Component X dataset: a real-world multivariate time series dataset for predictive maintenance.
-  Scientific Data 12:493. https://doi.org/10.1038/s41597-025-04802-6
+  Scientific Data 12:493. <https://doi.org/10.1038/s41597-025-04802-6>
 - Runge, J. et al. (2019). Detecting and quantifying causal associations in large nonlinear time
   series datasets. Science Advances 5(11). (PCMCI)
