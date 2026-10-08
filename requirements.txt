@@ -1,0 +1,15 @@
+# Data handling
+numpy>=1.26
+pandas>=2.2
+scikit-learn>=1.4
+networkx>=3.2
+
+# Causal discovery
+tigramite>=5.2
+
+# Dashboard
+streamlit>=1.30
+plotly>=5.20
+
+# Tests
+pytest>=8.0

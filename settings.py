@@ -61,16 +61,23 @@ MIN_RECORDING_ROWS = 20
 
 # How many time steps back a cause may act.
 #
-# With a 2.5 second grid, 2 steps covers 5 seconds, which is exactly the delay
-# the machine's alarm rules use. Going higher does not help: lag 3 scores the
-# same but takes ten times longer, and lag 4 scores worse because the larger
-# search space lets in more false links.
-MAX_LAG = 2
+# With a 2.5 second grid, 3 steps reaches 7.5 seconds back, comfortably past
+# the 5 second delay the machine's alarm rules use.
+#
+# Chosen by scripts/tune_settings.py, which tried every combination and scored
+# each against the engineers' own causal map. Lag 3 won at F1 0.71; lag 2 came
+# second at 0.67; lag 1 could not reach the delayed rules and scored 0.50.
+MAX_LAG = 3
 
-# Significance level for keeping a causal link.
-# Set to None to let the algorithm choose from [0.001, 0.005, 0.01, 0.025, 0.05]
-# using its own model-selection score. A fixed number overrides that.
-SIGNIFICANCE = 0.01
+# Significance level for keeping a causal link. Smaller means stricter.
+#
+# Also chosen by tuning. Being strict matters more here than it usually does:
+# at 0.001 the pipeline finds 7 links of which 6 are real, while at 0.05 it
+# finds 15 of which still only 6 are real. The extra links are noise, and they
+# make everything downstream slower and less trustworthy.
+#
+# Set to None to let the algorithm pick for itself from a standard range.
+SIGNIFICANCE = 0.001
 
 # Correct for testing many links at once. With 15 variables and 9 lags there
 # are over 2000 candidate links, so without correction a good number of edges
