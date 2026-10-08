@@ -6,9 +6,16 @@ statsmodels>=0.14
 scikit-learn>=1.4
 networkx>=3.2
 
+# Causal discovery (PCMCI+)
+tigramite>=5.2
+
 # Visualisation
 matplotlib>=3.8
 seaborn>=0.13
+plotly>=5.20
+
+# Interactive dashboard
+streamlit>=1.30
 
 # Notebooks
 jupyter>=1.0

@@ -224,3 +224,9 @@ data/**
 
 # Notebook checkpoints
 .ipynb_checkpoints/
+
+# Pipeline stage cache (regenerable via scripts/run_pipeline.py)
+artifacts/
+
+# macOS
+.DS_Store
