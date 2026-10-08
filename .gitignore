@@ -1,0 +1,33 @@
+# Datasets - downloaded, not stored in git
+data/
+
+# Pipeline outputs - all regenerable
+results/
+reports/
+
+# Python
+__pycache__/
+*.py[cod]
+.Python
+build/
+dist/
+*.egg-info/
+.venv/
+venv/
+env/
+
+# Testing and type checking
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Editors and OS
+.vscode/
+.idea/
+.DS_Store
+*.swp
+
+# Notebooks
+.ipynb_checkpoints/
