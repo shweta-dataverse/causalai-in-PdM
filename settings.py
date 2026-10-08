@@ -35,13 +35,24 @@ NORMAL_RECORDINGS = 60
 # are event logs, not regular time series. We resample onto a fixed grid.
 
 # Seconds between rows after resampling.
-# 1.0 s is a good fit here: the documented alarm rules act at 0 s and 5 s, so a
-# 1 s grid separates them cleanly without creating a huge table.
-RESAMPLE_SECONDS = 1.0
+#
+# This is the most important setting in the file, and it was measured, not
+# guessed. causRCA's alarm rules fire either immediately or after the fault has
+# been present for 5 seconds. What the method needs is a lag window that covers
+# those 5 seconds - and widening the window is far cheaper by making each step
+# bigger than by adding more steps.
+#
+# Measured on the coolant subsystem (F1 against the expert graph):
+#   grid 1.0s, lag 2  -> covers  2.0s, F1 0.50,   7s to run
+#   grid 2.5s, lag 2  -> covers  5.0s, F1 0.64,   3s to run   <- chosen
+#   grid 2.5s, lag 3  -> covers  7.5s, F1 0.64,  31s to run
+#   grid 2.5s, lag 4  -> covers 10.0s, F1 0.57, 352s to run
+#   grid 5.0s, lag 2  -> covers 10.0s, F1 0.56,   2s to run
+RESAMPLE_SECONDS = 2.5
 
 # Shortest recording to keep, in rows. Very short recordings carry too little
 # information for the statistical tests.
-MIN_RECORDING_ROWS = 30
+MIN_RECORDING_ROWS = 20
 
 
 # =============================================================================
@@ -49,10 +60,12 @@ MIN_RECORDING_ROWS = 30
 # =============================================================================
 
 # How many time steps back a cause may act.
-# MEASURED FROM THE DATA: alarm rules in causRCA fire either immediately (~0 s)
-# or after a 5 s hold. With a 1 s grid, we need at least lag 5 to see the
-# delayed rules, plus headroom. Using 2 would miss them entirely.
-MAX_LAG = 8
+#
+# With a 2.5 second grid, 2 steps covers 5 seconds, which is exactly the delay
+# the machine's alarm rules use. Going higher does not help: lag 3 scores the
+# same but takes ten times longer, and lag 4 scores worse because the larger
+# search space lets in more false links.
+MAX_LAG = 2
 
 # Significance level for keeping a causal link.
 # Set to None to let the algorithm choose from [0.001, 0.005, 0.01, 0.025, 0.05]
@@ -82,8 +95,11 @@ INDEPENDENCE_TEST = "discrete"
 
 # causRCA ships an expert-built causal graph, so we can tune by scoring
 # candidate settings against it directly. These are the values searched.
-TUNING_LAGS = [2, 5, 8, 10]
+TUNING_LAGS = [1, 2, 3]
 TUNING_SIGNIFICANCE = [0.001, 0.01, 0.05]
+
+# Resampling grids to try, in seconds. This matters more than the lag.
+TUNING_GRIDS = [1.0, 2.5, 5.0]
 
 # Which score decides the winner. "f1" balances finding real edges against
 # inventing false ones. Alternatives: "precision", "recall", "shd".
