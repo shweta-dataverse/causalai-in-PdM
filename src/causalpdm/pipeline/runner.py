@@ -45,6 +45,7 @@ class PipelineResult:
     intervention_checks: list = field(default_factory=list)
     intervention_score: dict = field(default_factory=dict)
     counterfactuals: list = field(default_factory=list)
+    counterfactual_score: dict = field(default_factory=dict)
     seconds_taken: float = 0.0
 
     def headline(self) -> dict:
@@ -60,6 +61,7 @@ class PipelineResult:
             "root_cause_map@3": self.root_cause_score.get("map@3"),
             "root_cause_top1": self.root_cause_score.get("found_in_top_1"),
             "intervention_f1": self.intervention_score.get("mean_f1"),
+            "counterfactual_success": self.counterfactual_score.get("known_causes_success_rate"),
             "seconds_taken": round(self.seconds_taken, 1),
         }
 
@@ -181,20 +183,51 @@ def run(subsystem: str = "coolant",
              f"alarm prediction F1 {intervention_score['mean_f1']}", started)
 
     # --- counterfactual for each fault -----------------------------------
+    # Most faults here were caused by more than one variable at once, so we ask
+    # two questions: what does fixing the single most suspicious variable
+    # achieve, and what does fixing all our top suspects together achieve.
     counterfactuals = []
-    for run_info, result in rca_results[:10]:
+    for run_info, result in rca_results:
         table = fault_tables.get(run_info.name)
         if table is None or not result.ranked_variables:
             continue
-        suspect = result.ranked_variables[0]
-        healthy_value = healthy.get(suspect, 1.0)
-        counterfactuals.append((run_info, explain.ask_what_if(
-            causal_model, table, {suspect: healthy_value}, alarm_names,
-            from_step=max(result.fault_window[0] - 2, max_lag))))
-    prevented = sum(1 for _, c in counterfactuals if c.prevented_the_fault)
+        start_at = max(result.fault_window[0] - 2, max_lag)
+
+        top_suspect = result.ranked_variables[0]
+        fix_one = explain.ask_what_if(
+            causal_model, table, {top_suspect: healthy.get(top_suspect, 1.0)},
+            alarm_names, from_step=start_at)
+
+        suspects = result.ranked_variables[:top_k]
+        fix_several = explain.ask_what_if(
+            causal_model, table,
+            {name: healthy.get(name, 1.0) for name in suspects},
+            alarm_names, from_step=start_at)
+
+        # Oracle check: fix the causes we know were really forced. This tells
+        # us whether the what-if machinery itself is sound, separately from
+        # whether root cause analysis picked the right variables. When this
+        # fails it is almost always because causal discovery missed a link, so
+        # it is also how we trace an error back to the stage that caused it.
+        fix_true_causes = explain.ask_what_if(
+            causal_model, table,
+            {name: healthy.get(name, 1.0) for name in run_info.caused_by},
+            alarm_names, from_step=start_at)
+
+        counterfactuals.append((run_info, fix_one, fix_several, fix_true_causes))
+
+    helped = sum(1 for _, one, _, _ in counterfactuals if one.prevented_something)
+    oracle = sum(1 for _, _, _, truth in counterfactuals if truth.prevented_everything)
+    counterfactual_score = {
+        "faults_examined": len(counterfactuals),
+        "top_suspect_silenced_an_alarm": helped,
+        "known_causes_prevented_fault": oracle,
+        "known_causes_success_rate": round(oracle / len(counterfactuals), 3) if counterfactuals else 0,
+    }
     if verbose:
-        _say("8 counterfactuals", f"{prevented} of {len(counterfactuals)} faults would "
-             f"have been prevented by fixing the top suspect", started)
+        _say("8 counterfactuals", f"fixing the top suspect silenced an alarm in "
+             f"{helped} of {len(counterfactuals)} faults; fixing the known true "
+             f"causes prevented {oracle} of {len(counterfactuals)} entirely", started)
 
     return PipelineResult(
         subsystem=subsystem, dataset_summary=dataset.summary(),
@@ -204,6 +237,7 @@ def run(subsystem: str = "coolant",
         causal_model=causal_model, root_cause_results=rca_results,
         root_cause_score=rca_score, intervention_checks=checks,
         intervention_score=intervention_score, counterfactuals=counterfactuals,
+        counterfactual_score=counterfactual_score,
         seconds_taken=time.time() - started)
 
 
@@ -211,6 +245,14 @@ def save(result: PipelineResult) -> None:
     """Write the results where the dashboard and reports can find them."""
     paths.make_output_folders()
     (paths.RESULTS_DIR / "headline.json").write_text(json.dumps(result.headline(), indent=2))
+    (paths.RESULTS_DIR / "scores.json").write_text(json.dumps({
+        "graph": result.graph_score,
+        "graph_ignoring_direction": result.graph_score_undirected,
+        "root_cause": result.root_cause_score,
+        "intervention": result.intervention_score,
+        "counterfactual": result.counterfactual_score,
+        "settings": result.settings_used,
+    }, indent=2))
     result.edge_comparison.to_csv(paths.RESULTS_DIR / "edge_comparison.csv", index=False)
     result.causal_graph.edges.to_csv(paths.RESULTS_DIR / "causal_graph.csv", index=False)
     result.causal_model.summary().to_csv(paths.RESULTS_DIR / "equations.csv", index=False)

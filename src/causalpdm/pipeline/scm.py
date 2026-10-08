@@ -36,6 +36,7 @@ import networkx as nx
 import numpy as np
 import pandas as pd
 from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import balanced_accuracy_score
 
 # Probabilities are never allowed to reach exactly 0 or 1, because that would
 # make a variable impossible to flip in a counterfactual no matter what we do.
@@ -44,21 +45,52 @@ PROBABILITY_FLOOR = 1e-4
 
 @dataclass
 class Mechanism:
-    """The fitted equation for one variable."""
+    """
+    The fitted equation for one variable.
+
+    There are two fitted models here, not one, and the reason is worth
+    understanding because it caused a real bug before it was spotted.
+
+    Alarms fire for about two percent of the time. A model fitted on that data
+    learns, quite correctly, that the alarm is almost always off - so correctly
+    that it will not switch the alarm on even when the pump it watches has
+    failed. Simulating a fault with such a model produces a machine where
+    nothing ever goes wrong, which is useless.
+
+    Re-weighting the rare state fixes simulation, but it deliberately distorts
+    the probabilities, and distorted probabilities are the wrong thing to
+    measure surprise with. So we keep both:
+
+      honest_model    the real probabilities. Used to ask "how likely was what
+                      we actually saw?", which is how root cause analysis spots
+                      a variable behaving in a way its causes cannot explain.
+
+      decision_model  re-weighted so rare events count as much as common ones.
+                      Used to ask "would this alarm fire?" when simulating.
+    """
 
     variable: str
     causes: list[tuple[str, int]]      # (cause name, how many steps back)
-    model: LogisticRegression
+    honest_model: LogisticRegression
+    decision_model: LogisticRegression
     accuracy: float                    # how often it predicts the variable correctly
     base_rate: float                   # how often the variable is on, overall
+    balanced_accuracy: float           # accuracy that treats rare events fairly
 
-    def probability(self, cause_values: np.ndarray) -> float:
-        """Chance this variable is on, given the state of its causes."""
+    def _chance_from(self, model, cause_values: np.ndarray) -> float:
         if len(self.causes) == 0:
             return float(self.base_rate)
-        raw = self.model.predict_proba(cause_values.reshape(1, -1))[0]
-        chance = float(raw[1]) if len(raw) > 1 else float(self.model.classes_[0])
+        raw = model.predict_proba(cause_values.reshape(1, -1))[0]
+        chance = float(raw[1]) if len(raw) > 1 else float(model.classes_[0])
         return float(np.clip(chance, PROBABILITY_FLOOR, 1 - PROBABILITY_FLOOR))
+
+    def probability(self, cause_values: np.ndarray) -> float:
+        """How likely this variable really is to be on, given its causes."""
+        return self._chance_from(self.honest_model, cause_values)
+
+    def will_switch_on(self, cause_values: np.ndarray) -> bool:
+        """Whether this variable should switch on, when simulating."""
+        return self._chance_from(self.decision_model, cause_values) > 0.5
 
 
 @dataclass
@@ -82,6 +114,7 @@ class StructuralCausalModel:
                 "variable": name,
                 "number_of_causes": len(mechanism.causes),
                 "accuracy": round(mechanism.accuracy, 3),
+                "balanced_accuracy": round(mechanism.balanced_accuracy, 3),
                 "share_of_time_on": round(mechanism.base_rate, 3),
                 "causes": ", ".join(
                     f"{cause} ({lag} steps back)" if lag else f"{cause} (same step)"
@@ -159,14 +192,21 @@ def fit(tables: list[pd.DataFrame], variables: list[str], edges: pd.DataFrame,
             unchanging.append(variable)
             continue
 
-        model = LogisticRegression(max_iter=1000, C=1.0)
-        model.fit(inputs, outputs)
+        honest = LogisticRegression(max_iter=1000, C=1.0)
+        honest.fit(inputs, outputs)
+
+        decision = LogisticRegression(max_iter=1000, C=1.0, class_weight="balanced")
+        decision.fit(inputs, outputs)
+
         mechanisms[variable] = Mechanism(
             variable=variable,
             causes=causes,
-            model=model,
-            accuracy=float(model.score(inputs, outputs)),
+            honest_model=honest,
+            decision_model=decision,
+            accuracy=float(honest.score(inputs, outputs)),
             base_rate=float(outputs.mean()),
+            balanced_accuracy=float(
+                balanced_accuracy_score(outputs, decision.predict(inputs))),
         )
 
     return StructuralCausalModel(
@@ -239,12 +279,15 @@ def simulate(model: StructuralCausalModel, recording: pd.DataFrame,
                 result.at[step - lag, cause] if lag > 0 else result.at[step, cause]
                 for cause, lag in mechanism.causes
             ])
-            chance = mechanism.probability(values)
-
             if hidden_randomness is not None:
+                # Replaying one specific recording: use its own randomness
+                # against the honest probability, so the replay is faithful.
+                chance = mechanism.probability(values)
                 threshold = float(hidden_randomness.at[step, name])
                 result.at[step, name] = 1.0 if threshold < chance else 0.0
             else:
-                result.at[step, name] = 1.0 if chance > 0.5 else 0.0
+                # Predicting what would generally happen: ask whether this
+                # should switch on, judging rare and common states evenly.
+                result.at[step, name] = 1.0 if mechanism.will_switch_on(values) else 0.0
 
     return result

@@ -61,15 +61,31 @@ class InterventionResult:
 
 @dataclass
 class CounterfactualResult:
-    """Whether changing one thing would have prevented this specific breakdown."""
+    """
+    What would have happened if one thing had been different.
+
+    Faults in causRCA usually have more than one cause - a leak trips both the
+    pump and the tank level, for example. So fixing a single cause normally
+    silences the alarm belonging to that cause and leaves the others ringing.
+    That is the right answer, not a failure, which is why prevention is
+    reported as "which alarms stopped" rather than a single yes or no.
+    """
 
     changed: dict[str, float]
     from_step: int
     actual: pd.DataFrame
     what_would_have_happened: pd.DataFrame
     alarm_changes: pd.DataFrame
-    prevented_the_fault: bool
+    alarms_prevented: list[str]
+    alarms_still_firing: list[str]
+    prevented_everything: bool
+    prevented_something: bool
     explanation: str
+
+    @property
+    def prevented_the_fault(self) -> bool:
+        """True only if no alarm fires at all afterwards."""
+        return self.prevented_everything
 
 
 def _compare_alarms(before: pd.DataFrame, after: pd.DataFrame,
@@ -124,37 +140,47 @@ def ask_what_if(model: StructuralCausalModel, recording: pd.DataFrame,
                            hold_fixed=change, from_step=from_step)
 
     comparison = _compare_alarms(actual, what_if, alarm_names, from_step)
-    fired_before = comparison["fired_before"].any()
-    fired_after = comparison["fired_after"].any()
-    prevented = bool(fired_before and not fired_after)
+    stopped = comparison.loc[
+        comparison["fired_before"] & ~comparison["fired_after"], "alarm"].tolist()
+    still_firing = comparison.loc[comparison["fired_after"], "alarm"].tolist()
+    fired_before = bool(comparison["fired_before"].any())
 
-    variable, value = next(iter(change.items()))
-    state = "on" if value > 0.5 else "off"
-    if prevented:
-        stopped = comparison.loc[comparison["fired_before"] & ~comparison["fired_after"], "alarm"]
+    prevented_everything = bool(fired_before and not still_firing)
+    prevented_something = bool(stopped)
+
+    changes = ", ".join(
+        f"{name} {'on' if value > 0.5 else 'off'}" for name, value in change.items())
+
+    if prevented_everything:
         explanation = (
-            f"Holding {variable} {state} from step {from_step} would have prevented "
-            f"this fault. The alarms that fired in reality "
-            f"({', '.join(stopped)}) would not have fired."
+            f"Holding {changes} would have prevented this fault completely. "
+            f"Every alarm that fired in reality ({', '.join(stopped)}) would "
+            f"have stayed silent."
         )
-    elif fired_after:
+    elif prevented_something:
         explanation = (
-            f"Holding {variable} {state} would not have prevented this fault. "
-            f"The alarms still fire, so this variable is not the whole story - "
-            f"another cause is also at work."
+            f"Holding {changes} would have stopped {', '.join(stopped)}, but "
+            f"{', '.join(still_firing)} would still have fired. Something else "
+            f"is also wrong, so this fix on its own is not enough."
+        )
+    elif fired_before:
+        explanation = (
+            f"Holding {changes} would have changed nothing. The same alarms "
+            f"({', '.join(still_firing)}) still fire, so this is not the cause."
         )
     else:
-        explanation = (
-            f"No alarms fired in this recording, so there is nothing for "
-            f"{variable} to have prevented."
-        )
+        explanation = "No alarms fired in this recording, so there was nothing to prevent."
+
     if describe:
         explanation = f"{describe} {explanation}"
 
     return CounterfactualResult(
         changed=change, from_step=from_step, actual=actual,
         what_would_have_happened=what_if, alarm_changes=comparison,
-        prevented_the_fault=prevented, explanation=explanation)
+        alarms_prevented=stopped, alarms_still_firing=still_firing,
+        prevented_everything=prevented_everything,
+        prevented_something=prevented_something,
+        explanation=explanation)
 
 
 def validate_intervention(model: StructuralCausalModel, healthy_recording: pd.DataFrame,
