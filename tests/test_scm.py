@@ -20,11 +20,15 @@ from causalpdm.pipeline import discovery, scm
 def small_model(coolant, coolant_tables):
     tables, _, _ = coolant_tables
     variables = coolant.expert_graph.variable_names
-    # Use the expert graph itself, so this test checks the model and not the
-    # quality of causal discovery.
+    # Use the expert graph itself, so this test checks the model rather than
+    # the quality of causal discovery. Each link is given at lag 0 and lag 1,
+    # because the machine's rules act both immediately and after a delay and we
+    # do not want the test to depend on guessing which.
     edges = pd.DataFrame([
-        {"cause": cause, "effect": effect, "lag": 1, "strength": 0.5, "abs_strength": 0.5}
+        {"cause": cause, "effect": effect, "lag": lag,
+         "strength": 0.5, "abs_strength": 0.5}
         for cause, effect in coolant.expert_graph.edge_pairs
+        for lag in (0, 1)
     ])
     model = scm.fit(tables, variables, edges, max_lag=2)
     return model, tables
@@ -48,6 +52,29 @@ def test_probabilities_stay_strictly_between_zero_and_one(small_model):
         values = np.zeros(len(mechanism.causes))
         chance = mechanism.probability(values)
         assert 0.0 < chance < 1.0
+
+
+def test_rare_events_can_still_be_switched_on(small_model):
+    """
+    Alarms fire rarely, so a model fitted on the raw data learns they are
+    almost always off - so firmly that it will not switch one on even when its
+    cause has failed. The re-weighted decision model exists to prevent that,
+    and this test is what caught the problem originally.
+    """
+    model, _ = small_model
+    alarm = "HP_A_700304"
+    mechanism = model.mechanisms.get(alarm)
+    if mechanism is None:
+        pytest.skip(f"{alarm} has no equation in this graph")
+
+    causes = [name for name, _ in mechanism.causes]
+    if "HP_Pump_Ok" not in causes:
+        pytest.skip("the pump is not a cause of the alarm in this graph")
+
+    # Pump has failed, alarm not yet firing: the alarm should switch on.
+    values = np.array([0.0 for _ in mechanism.causes])
+    assert mechanism.will_switch_on(values), \
+        "the alarm refuses to fire even though the pump it watches has failed"
 
 
 def test_replaying_with_recovered_randomness_reproduces_reality(small_model):
