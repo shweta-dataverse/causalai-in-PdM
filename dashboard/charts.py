@@ -214,3 +214,47 @@ def score_bars(scores: dict[str, float], title: str) -> go.Figure:
         hovertemplate="%{y}: %{x:.3f}<extra></extra>"))
     figure.update_layout(title=title, xaxis_range=[0, 1.15])
     return _tidy(figure, height=120 + 42 * max(len(names), 1))
+
+
+def mechanism_accuracy(summary: pd.DataFrame) -> go.Figure:
+    """How well each signal is explained by the signals feeding into it."""
+    data = summary.sort_values("accuracy").copy()
+    figure = go.Figure(go.Bar(
+        x=data["accuracy"], y=data["variable"], orientation="h",
+        marker_color=COLOURS["accent"],
+        customdata=data["causes"],
+        hovertemplate="<b>%{y}</b><br>explained %{x:.0%} of the time"
+                      "<br>driven by: %{customdata}<extra></extra>"))
+    figure.update_layout(
+        title="How well each signal is explained by its causes",
+        xaxis_title="share of the time the equation gets it right",
+        xaxis_range=[0, 1.05])
+    return _tidy(figure, height=120 + 26 * max(len(data), 1))
+
+
+def tuning_scatter(finished: pd.DataFrame) -> go.Figure:
+    """
+    Every combination of settings that was tried: accuracy against time taken.
+
+    The useful corner is bottom right - accurate and quick.
+    """
+    figure = go.Figure()
+    for grid, group in finished.groupby("seconds_per_step"):
+        figure.add_trace(go.Scatter(
+            x=group["f1"], y=group["seconds_to_run"], mode="markers",
+            name=f"{grid}s per row",
+            marker=dict(size=14, line=dict(width=1, color="white")),
+            customdata=group[["max_lag", "significance", "edges_found", "correct"]],
+            hovertemplate=(
+                "accuracy %{x:.2f}<br>took %{y:.0f} seconds"
+                "<br>steps back: %{customdata[0]}"
+                "<br>evidence needed: %{customdata[1]}"
+                "<br>links found: %{customdata[2]}, of those real: %{customdata[3]}"
+                "<extra></extra>")))
+    best = finished.loc[finished["f1"].idxmax()]
+    figure.add_annotation(x=best["f1"], y=best["seconds_to_run"],
+                          text="best", showarrow=True, arrowhead=2, ay=-34)
+    figure.update_layout(title="Every setting tried: accuracy against time taken",
+                         xaxis_title="accuracy (F1) - further right is better",
+                         yaxis_title="seconds to run - lower is better")
+    return _tidy(figure, height=430)
