@@ -184,21 +184,59 @@ reported as mean +/- sd.
 
 ---
 
-# T8 - Majority-voting discovery variant  *(optional)*
+# T8 - Majority-voting discovery, and the full 92-signal graph  **[P0]**
 
-Their Table 3 used per-dataset runs with majority voting; we pool recordings.
-Implementing their protocol makes the discovery comparison exactly
-apples-to-apples. **If not implemented, the difference must be stated
-explicitly in the thesis** - pooling is arguably the better protocol and is part
-of our contribution, but it must not be presented as identical to theirs.
+**This is the enabling task, not an optional extra.**
+
+Our current protocol pools every recording into one PCMCI run. That works well
+on a 15-signal subsystem and does not scale to 92 signals - a pooled run was
+killed after seven hours with no output.
+
+The paper's protocol runs each recording **separately** and decides each edge by
+majority vote across runs. They state the reason: *"Concatenation approaches
+showed significantly worse performance and runtime."*
+
+**Measured here:** one recording on the full 92-variable graph takes **3.1
+seconds** (tau_max 1, 5 s grid, max_conditions 2). Across 270 available
+recordings that is roughly **14 minutes sequentially**, and the runs are
+independent so they parallelise trivially.
+
+So majority voting both (a) makes the discovery comparison exactly
+apples-to-apples with Table 3, and (b) is the only way the full graph is
+computable at all.
+
+**Do**
+- In `discovery.py`, add `discover_by_majority_vote(tables, variables, ...)`:
+  run `discover()` on each table individually, collect the directed edges, keep
+  an edge when it appears in at least `vote_threshold` of the runs
+  (default 0.5).
+- Keep the existing pooled `discover()` unchanged - comparing the two protocols
+  on a subsystem is an ablation row and a result in its own right.
+- Record the per-edge vote share, so edge confidence can be reported.
+
+**Acceptance criteria**
+- Runs on the full 92-signal graph and finishes in under an hour.
+- Produces F1 and SHD against the 104-link expert graph, comparable with
+  Table 3's Full column (**PC 0.15 / SHD 99, FGES 0.20 / 157, PCMCI 0.20 / 264**).
+- Target: **beat 0.20**. Do not expect anything near the 0.71 we reach on
+  coolant - a single recording has only ~106 rows against 92 variables and
+  individually finds almost nothing (measured: 3 edges, F1 0.0). Majority voting
+  across hundreds of weak runs is what recovers signal, which is also why the
+  published full-graph scores are low.
+- Also run it on the three subsystems, so the pooled-vs-voted comparison is
+  available at every scale.
+
+**Why this matters beyond the number.** Evaluating only on hand-picked
+subsystems assumes someone already knows which subsystem failed, which is most
+of the diagnosis. The paper is explicit that Sub *"mimics situations where
+expert knowledge is present to limit the scope."* A thesis on actionable root
+cause analysis has to show the method works when nobody has narrowed it down
+first.
 
 ---
 
 # Explicitly out of scope - state these in the thesis
 
-- **Full 92-signal graph.** The discrete G-test hits NumPy's 32-dimension array
-  limit; a conditioning cap was added but a 6.5 hour run produced nothing.
-  Scaling is the known hard problem - their own full-graph F1 is only 0.15-0.20.
 - **Supervised RCA (their Table 5).** Different task: ranks diagnosis labels,
   not causal variables, with cross-validation. Not what this pipeline does.
 - **Additional discovery algorithms** (Bagged-PCMCI+, LPCMCI, DYNOTEARS).
@@ -215,10 +253,13 @@ of our contribution, but it must not be presented as identical to theirs.
 | Day | Tasks |
 |---|---|
 | 1 | **T1 (gate)**, then T2 |
-| 2 | T3, re-run everything with the improved RCA, freeze results |
-| 3 | T4 |
-| 4 | T6, T7, T5 if time. **Freeze the code.** |
+| 2 | **T8** (majority voting + full graph), then T3 |
+| 3 | T4, T5 - re-run everything, freeze results |
+| 4 | T6, T7. **Freeze the code.** |
 | 5-14 | Write |
+
+T8 moves to day 2 because the full graph is a required result, not an optional
+one, and because it unblocks the Full setting in T5.
 
 **The freeze on day 4 matters more than any single improvement.** Writing
 against a moving codebase is what makes theses late.
