@@ -144,16 +144,39 @@ def build_tables(
     for path in normal_recordings:
         table = to_table(read_change_log(path), variables, seconds_per_step, healthy_values)
         if len(table) >= min_rows:
-            tables.append(table)
+            tables.append(discretise(table))
             labels.append(f"normal/{path.stem}")
 
     for run in fault_runs:
         table = to_table(read_change_log(run.path), variables, seconds_per_step, healthy_values)
         if len(table) >= min_rows:
-            tables.append(table)
+            tables.append(discretise(table))
             labels.append(f"fault/{run.name}")
 
     return tables, labels, healthy_values
+
+
+def discretise(table: pd.DataFrame, max_levels: int = 4) -> pd.DataFrame:
+    """
+    Bin any signal that is not already a small set of states.
+
+    The coolant and probe subsystems are entirely true/false, but the full
+    machine includes a handful of analog readings - spindle speeds, cycle
+    times, hydraulic pressure. The G-test needs a small number of states, so
+    those are cut into equal-sized bins. Signals that already take only a few
+    values are left exactly as they are.
+    """
+    out = table.copy()
+    for column in out.columns:
+        if out[column].nunique() <= max_levels:
+            continue
+        try:
+            out[column] = pd.qcut(out[column], max_levels, labels=False,
+                                  duplicates="drop").astype(float)
+        except ValueError:
+            out[column] = pd.cut(out[column], max_levels, labels=False).astype(float)
+        out[column] = out[column].fillna(0.0)
+    return out
 
 
 def describe_tables(tables: list[pd.DataFrame], variables: list[str]) -> pd.DataFrame:

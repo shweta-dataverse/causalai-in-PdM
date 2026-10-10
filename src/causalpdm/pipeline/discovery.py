@@ -84,12 +84,19 @@ def discover(
     multiple_test_correction: str = "fdr_bh",
     max_conditions: int = 3,
     max_combinations: int = 2,
+    max_parents_conditioned: int | None = 6,
 ) -> CausalGraph:
     """
     Learn a causal graph from a set of recordings.
 
     Setting `significance` to None lets PCMCI+ choose it from a standard range
     using its own model-selection score, instead of us guessing.
+
+    `max_parents_conditioned` caps how many already-known causes of each end of
+    a link get conditioned on. On small subsystems this changes little, but it
+    is not optional on the full 92-signal machine: the discrete test builds one
+    array dimension per conditioned signal, and NumPy refuses arrays beyond 32
+    dimensions. Unbounded, the full graph reached 39 and crashed.
 
     `multiple_test_correction` matters more than it sounds. With 15 variables
     and 9 lags there are over two thousand candidate links, so without
@@ -110,6 +117,8 @@ def discover(
         pc_alpha=significance,
         max_conds_dim=max_conditions,
         max_combinations=max_combinations,
+        max_conds_py=max_parents_conditioned,
+        max_conds_px=max_parents_conditioned,
         fdr_method=multiple_test_correction,
     )
 
