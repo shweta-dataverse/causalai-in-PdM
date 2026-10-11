@@ -81,7 +81,7 @@ def search(
     signal.signal(signal.SIGALRM, _raise_timeout)
 
     for grid in grids:
-        tables, _, _ = preprocess.build_tables(
+        tables, _, _, _ = preprocess.build_tables(
             dataset.fault_runs, dataset.normal_recordings, variables, grid, min_rows)
 
         for lag in lags:

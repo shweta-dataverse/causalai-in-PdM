@@ -1,0 +1,86 @@
+{
+  "method": "TimeRank",
+  "metric": "MAP@3",
+  "tolerance": 0.005,
+  "passed": true,
+  "results": [
+    {
+      "subsystem": "coolant",
+      "setting": "sub",
+      "faults": 25,
+      "published_map@3": 0.8533,
+      "ours_map@3": 0.853,
+      "tie_order_range": [
+        0.837,
+        0.853
+      ],
+      "matches_exactly": true,
+      "agrees": true
+    },
+    {
+      "subsystem": "coolant",
+      "setting": "full",
+      "faults": 25,
+      "published_map@3": 0.3533,
+      "ours_map@3": 0.383,
+      "tie_order_range": [
+        0.353,
+        0.383
+      ],
+      "matches_exactly": false,
+      "agrees": true
+    },
+    {
+      "subsystem": "hydraulics",
+      "setting": "sub",
+      "faults": 41,
+      "published_map@3": 0.4722,
+      "ours_map@3": 0.472,
+      "tie_order_range": [
+        0.46,
+        0.472
+      ],
+      "matches_exactly": true,
+      "agrees": true
+    },
+    {
+      "subsystem": "hydraulics",
+      "setting": "full",
+      "faults": 41,
+      "published_map@3": 0.1836,
+      "ours_map@3": 0.18,
+      "tie_order_range": [
+        0.18,
+        0.2
+      ],
+      "matches_exactly": true,
+      "agrees": true
+    },
+    {
+      "subsystem": "probe",
+      "setting": "sub",
+      "faults": 34,
+      "published_map@3": 0.4706,
+      "ours_map@3": 0.471,
+      "tie_order_range": [
+        0.471,
+        0.471
+      ],
+      "matches_exactly": true,
+      "agrees": true
+    },
+    {
+      "subsystem": "probe",
+      "setting": "full",
+      "faults": 34,
+      "published_map@3": 0.1912,
+      "ours_map@3": 0.191,
+      "tie_order_range": [
+        0.191,
+        0.191
+      ],
+      "matches_exactly": true,
+      "agrees": true
+    }
+  ]
+}

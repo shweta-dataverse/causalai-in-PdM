@@ -17,9 +17,11 @@ came out of nowhere as far as the model is concerned.
 
 So we score each variable by how badly its own causes explain its behaviour
 during the fault. That score is high exactly for variables something external
-acted on, and low for everything merely reacting downstream. This follows the
-counterfactual attribution approach of Budhathoki et al. (2022), which scores
-root causes by how far each variable's own random term departed from normal.
+acted on, and low for everything merely reacting downstream. The idea is
+inspired by Budhathoki et al. (2022), who attribute an outlier to each
+variable's own random term. Theirs is a Shapley-based attribution of an
+outlier score; ours is simpler - the average surprise of each variable given
+its causes over the fault window.
 
 Conveniently, this is also precisely what causRCA's ground truth records: the
 digital twin forced certain variables to a value, and those are the ones whose

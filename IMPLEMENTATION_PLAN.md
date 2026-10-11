@@ -12,6 +12,30 @@ for the published protocol we must match.
 confirmed on 2026-10-11. Do not reopen them. If doubt comes back, re-read the
 section below.
 
+## Status
+
+**Day 1 done (2026-10-11):** A1-A4 and the T1 gate. All subsystems re-run;
+current numbers in `HANDOFF.md` section 4.
+
+- **T1 passed.** TimeRank reproduces the published MAP@3 exactly in all three
+  Sub settings (coolant 0.853, hydraulics 0.472, probe 0.471). Full settings
+  fall inside the range that arbitrary tie order produces (coolant Full spans
+  0.353-0.383 from ties alone). Our AP@k formula is also identical to theirs
+  line for line. `results/final/baseline_validation.json`.
+- **The authors' code is public:** github.com/causalgraph/causRCA (Apache-2.0),
+  including every RCA baseline and their learned graphs
+  (`eval/cd/results/*.gml`). T4 is a port, not a reconstruction. Credit it.
+- **Dataset label error found:** exp_10 and exp_15 label the temperature
+  switches as forced True; every recording shows them going False. The only
+  contradiction in 100 runs. Worth one sentence in the thesis and a note to
+  the authors.
+- **Pipeline's own counterfactual is 0% on coolant.** RCA puts pump-state
+  consequences (`LP_Pump_On`, `HP_Pump_isOff`) in places 2-3. T2 is now the
+  most important remaining task for the headline.
+- **Probe does not work with coolant settings** (graph F1 0.18, intervention
+  F1 0.0). Report it as a held-out failure; diagnose on day 3 only if time.
+- **Hydraulics discovery now takes seconds**, not 36 minutes.
+
 ---
 
 ## What the thesis is, and what it claims
@@ -243,9 +267,16 @@ honest result, not a failure.
 
 ## T2 - Graph-based candidate restriction in RCA
 
-Unchanged. MAP@3 0.45 vs top-1 0.92: we find one cause of two or three.
+MAP@3 0.45 vs top-1 0.92: we find one cause of two or three, and places 2-3
+go to pump states that are consequences. This also drives the 0% pipeline
+counterfactual on coolant.
 
-- Add `restrict_to_alarm_ancestors: bool = True` to `rca.analyse()`.
+Their best method (CausTR) restricts candidates to the **direct parents** of
+the alarms active at diagnosis time, not all ancestors
+(`CausalPrioTimeRecencyRCA` in their code). Try parents first, ancestors as
+the variant.
+
+- Add a candidate restriction parameter to `rca.analyse()`, parents by default.
 - Keep the unrestricted path for the ablation.
 - Targets: MAP@3 >= 0.75, recall@3 >= 0.70, top-1 not below 0.85.
 - Add a test that known ancestors appear in the candidate set.

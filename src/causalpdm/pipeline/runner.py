@@ -14,9 +14,11 @@ in the pipeline takes more than a few seconds.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import pickle
 import time
+from collections import Counter
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -61,9 +63,19 @@ class PipelineResult:
             "root_cause_map@3": self.root_cause_score.get("map@3"),
             "root_cause_top1": self.root_cause_score.get("found_in_top_1"),
             "intervention_f1": self.intervention_score.get("mean_f1"),
-            "counterfactual_success": self.counterfactual_score.get("known_causes_success_rate"),
+            "intervention_scenarios": self.intervention_score.get("scenarios_checked"),
+            "counterfactual_success": self.counterfactual_score.get("suspects_success_rate"),
+            "counterfactual_upper_bound": self.counterfactual_score.get("known_causes_success_rate"),
             "seconds_taken": round(self.seconds_taken, 1),
         }
+
+
+def _fingerprint(tables: list[pd.DataFrame]) -> str:
+    """A short hash of the table contents, for naming cache files."""
+    digest = hashlib.sha1()
+    for table in tables:
+        digest.update(pd.util.hash_pandas_object(table, index=True).to_numpy().tobytes())
+    return digest.hexdigest()[:10]
 
 
 def _say(step: str, message: str, started: float) -> None:
@@ -102,7 +114,7 @@ def run(subsystem: str = "coolant",
              f"{len(variables)} variables", started)
 
     # --- tables ----------------------------------------------------------
-    tables, labels, healthy = preprocess.build_tables(
+    tables, labels, healthy, cut_points = preprocess.build_tables(
         dataset.fault_runs, dataset.normal_recordings, variables,
         seconds_per_step, min_rows)
     if verbose:
@@ -110,8 +122,12 @@ def run(subsystem: str = "coolant",
              f"{seconds_per_step}s grid", started)
 
     # --- discover --------------------------------------------------------
+    # The cache name includes a fingerprint of the tables themselves, so a
+    # change to preprocessing can never silently reuse a graph learned from
+    # the old tables.
     cache_file = paths.CACHE_DIR / (
-        f"graph_{subsystem}_{seconds_per_step}_{max_lag}_{significance}.pkl")
+        f"graph_{subsystem}_{seconds_per_step}_{max_lag}_{significance}_"
+        f"{multiple_test_correction}_{_fingerprint(tables)}.pkl")
     if use_cache and cache_file.exists():
         graph = pickle.loads(cache_file.read_bytes())
         if verbose:
@@ -160,18 +176,24 @@ def run(subsystem: str = "coolant",
              f"top-1 hit rate {rca_score.get('found_in_top_1')}", started)
 
     # --- check what-if answers against the real injected faults -----------
+    # One check per fault scenario: runs of the same scenario force the same
+    # thing, so replaying each run would only repeat the same question.
     healthy_table = next((t for l, t in zip(labels, tables) if l.startswith("normal")), None)
     checks = []
     if healthy_table is not None:
+        runs_per_scenario = Counter(run.experiment for run in dataset.fault_runs)
         seen = set()
         for run_info in dataset.fault_runs:
-            key = (tuple(run_info.caused_by), tuple(run_info.expected_alarms))
-            if key in seen:
+            if run_info.experiment in seen:
                 continue
-            seen.add(key)
-            checks.append(explain.validate_intervention(
-                causal_model, healthy_table, run_info.caused_by, 0.0,
-                run_info.expected_alarms, alarm_names, from_step=max_lag + 2))
+            seen.add(run_info.experiment)
+            forced = {name: preprocess.forced_state(run_info, name, cut_points)
+                      for name in run_info.caused_by}
+            check = explain.validate_intervention(
+                causal_model, healthy_table, forced,
+                run_info.expected_alarms, alarm_names, from_step=max_lag + 2)
+            checks.append({"scenario": run_info.experiment,
+                           "runs": runs_per_scenario[run_info.experiment], **check})
     intervention_score = {
         "scenarios_checked": len(checks),
         "mean_precision": round(sum(c["precision"] for c in checks) / len(checks), 3) if checks else 0,
@@ -216,18 +238,26 @@ def run(subsystem: str = "coolant",
 
         counterfactuals.append((run_info, fix_one, fix_several, fix_true_causes))
 
+    # The headline is what the pipeline achieves on its own: fixing the suspects
+    # that root cause analysis named. Fixing the known true causes is reported
+    # only as an upper bound - it uses the answer, which a real plant never has.
+    examined = len(counterfactuals)
+    rate = lambda count: round(count / examined, 3) if examined else 0
     helped = sum(1 for _, one, _, _ in counterfactuals if one.prevented_something)
+    suspects = sum(1 for _, _, several, _ in counterfactuals if several.prevented_everything)
     oracle = sum(1 for _, _, _, truth in counterfactuals if truth.prevented_everything)
     counterfactual_score = {
-        "faults_examined": len(counterfactuals),
+        "faults_examined": examined,
         "top_suspect_silenced_an_alarm": helped,
+        "suspects_prevented_fault": suspects,
+        "suspects_success_rate": rate(suspects),
         "known_causes_prevented_fault": oracle,
-        "known_causes_success_rate": round(oracle / len(counterfactuals), 3) if counterfactuals else 0,
+        "known_causes_success_rate": rate(oracle),
     }
     if verbose:
-        _say("8 counterfactuals", f"fixing the top suspect silenced an alarm in "
-             f"{helped} of {len(counterfactuals)} faults; fixing the known true "
-             f"causes prevented {oracle} of {len(counterfactuals)} entirely", started)
+        _say("8 counterfactuals", f"fixing our top {top_k} suspects prevented "
+             f"{suspects} of {examined} faults entirely; upper bound with the "
+             f"known true causes {oracle} of {examined}", started)
 
     return PipelineResult(
         subsystem=subsystem, dataset_summary=dataset.summary(),
@@ -242,10 +272,17 @@ def run(subsystem: str = "coolant",
 
 
 def save(result: PipelineResult) -> None:
-    """Write the results where the dashboard and reports can find them."""
+    """
+    Write the results where the dashboard and reports can find them.
+
+    Each subsystem gets its own folder, so running one never overwrites
+    another's results.
+    """
     paths.make_output_folders()
-    (paths.RESULTS_DIR / "headline.json").write_text(json.dumps(result.headline(), indent=2))
-    (paths.RESULTS_DIR / "scores.json").write_text(json.dumps({
+    folder = paths.RESULTS_DIR / result.subsystem
+    folder.mkdir(exist_ok=True)
+    (folder / "headline.json").write_text(json.dumps(result.headline(), indent=2))
+    (folder / "scores.json").write_text(json.dumps({
         "graph": result.graph_score,
         "graph_ignoring_direction": result.graph_score_undirected,
         "root_cause": result.root_cause_score,
@@ -253,9 +290,12 @@ def save(result: PipelineResult) -> None:
         "counterfactual": result.counterfactual_score,
         "settings": result.settings_used,
     }, indent=2))
-    result.edge_comparison.to_csv(paths.RESULTS_DIR / "edge_comparison.csv", index=False)
-    result.causal_graph.edges.to_csv(paths.RESULTS_DIR / "causal_graph.csv", index=False)
-    result.causal_model.summary().to_csv(paths.RESULTS_DIR / "equations.csv", index=False)
+    result.edge_comparison.to_csv(folder / "edge_comparison.csv", index=False)
+    result.causal_graph.edges.to_csv(folder / "causal_graph.csv", index=False)
+    result.causal_model.summary().to_csv(folder / "equations.csv", index=False)
     pd.DataFrame(result.intervention_checks).to_csv(
-        paths.RESULTS_DIR / "intervention_checks.csv", index=False)
-    (paths.CACHE_DIR / "pipeline_result.pkl").write_bytes(pickle.dumps(result))
+        folder / "intervention_by_scenario.csv", index=False)
+
+    name = ("pipeline_result.pkl" if result.subsystem == "coolant"
+            else f"pipeline_result_{result.subsystem}.pkl")
+    (paths.CACHE_DIR / name).write_bytes(pickle.dumps(result))

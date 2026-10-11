@@ -42,12 +42,17 @@ NORMAL_RECORDINGS = 60
 # those 5 seconds - and widening the window is far cheaper by making each step
 # bigger than by adding more steps.
 #
-# Measured on the coolant subsystem (F1 against the expert graph):
-#   grid 1.0s, lag 2  -> covers  2.0s, F1 0.50,   7s to run
-#   grid 2.5s, lag 2  -> covers  5.0s, F1 0.64,   3s to run   <- chosen
-#   grid 2.5s, lag 3  -> covers  7.5s, F1 0.64,  31s to run
-#   grid 2.5s, lag 4  -> covers 10.0s, F1 0.57, 352s to run
-#   grid 5.0s, lag 2  -> covers 10.0s, F1 0.56,   2s to run
+# Measured on the coolant subsystem at significance 0.001 (F1 against the
+# expert graph; full table in results/final/tuning_results.csv):
+#   grid 1.0s, lag 2  -> covers  2.0s, F1 0.50,  10s to run
+#   grid 1.0s, lag 3  -> covers  3.0s, F1 0.50,  13s to run
+#   grid 2.5s, lag 2  -> covers  5.0s, F1 0.67,   5s to run
+#   grid 2.5s, lag 3  -> covers  7.5s, F1 0.71,   6s to run   <- chosen
+#   grid 5.0s, lag 2  -> covers 10.0s, F1 0.56,   3s to run
+#
+# These were tuned on coolant only. Hydraulics, probe and the full machine are
+# run with the same values unchanged, so they are not tuned on their own
+# answers.
 RESAMPLE_SECONDS = 2.5
 
 # Shortest recording to keep, in rows. Very short recordings carry too little
@@ -73,7 +78,7 @@ MAX_LAG = 3
 #
 # Also chosen by tuning. Being strict matters more here than it usually does:
 # at 0.001 the pipeline finds 7 links of which 6 are real, while at 0.05 it
-# finds 15 of which still only 6 are real. The extra links are noise, and they
+# finds 14 of which only 5 are real. The extra links are noise, and they
 # make everything downstream slower and less trustworthy.
 #
 # Set to None to let the algorithm pick for itself from a standard range.

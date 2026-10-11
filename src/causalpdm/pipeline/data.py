@@ -41,6 +41,7 @@ class FaultRun:
     run: str                        # e.g. "run_2"
     path: Path                      # the CSV holding the change log
     caused_by: list[str]            # variables the digital twin tampered with
+    forced_states: dict             # what each of them was forced to, as labelled
     expected_alarms: list[str]      # alarms the engineers expected to fire
     diagnosis: str                  # plain-English fault description
     fault_started_at: float         # seconds into the recording
@@ -114,6 +115,22 @@ def load_expert_graph(subsystem: str) -> ExpertGraph:
     return ExpertGraph(variables=variables, edges=edges, subsystem=subsystem)
 
 
+def forced_states(description: dict) -> dict:
+    """
+    What each tampered variable was forced to, as the dataset labels it.
+
+    The states live inside the diagnoses, not next to `manipulatedVars`, and a
+    few scenarios list two diagnoses that each force a different variable
+    (exp_15, exp_18). So we merge them. Values are kept exactly as written:
+    True/False for switches, a number, or a condition such as "< 6600" for
+    hydraulic pressure.
+    """
+    states = {}
+    for diagnosis in description.get("diagnoses", []):
+        states.update(diagnosis.get("variablesStates", {}))
+    return {name: states[name] for name in description["manipulatedVars"] if name in states}
+
+
 def load_fault_runs(subsystem: str) -> list[FaultRun]:
     """Read every fault recording for a subsystem, with its ground-truth labels."""
     if subsystem == "full":
@@ -144,6 +161,7 @@ def load_fault_runs(subsystem: str) -> list[FaultRun]:
                     run=run_dir.name,
                     path=csv_files[0],
                     caused_by=description["manipulatedVars"],
+                    forced_states=forced_states(description),
                     expected_alarms=description.get("alarms", []),
                     diagnosis=description["diagnoses"][0]["name"],
                     fault_started_at=timing["cause_start_at"],

@@ -125,7 +125,7 @@ def main() -> int:
             f"{appears_in_normal[name]:>9}/20")
 
     out(section("5. After turning the change logs into tables"))
-    tables, labels, healthy = preprocess.build_tables(
+    tables, labels, healthy, _ = preprocess.build_tables(
         dataset.fault_runs, dataset.normal_recordings, variables,
         settings.RESAMPLE_SECONDS, settings.MIN_RECORDING_ROWS)
     fault_count = sum(1 for label in labels if label.startswith("fault"))

@@ -47,11 +47,22 @@ Measured on the coolant subsystem, against the dataset's own ground truth:
 | Causal map accuracy (F1) | 0.71 |
 | Correct cause ranked first | 92% of faults |
 | MAP@3 for root cause | 0.45 |
-| Alarms correctly predicted when a fault is simulated | F1 0.83 |
-| Faults prevented by fixing their real causes | 76% |
+| Alarms correctly predicted when a fault is simulated | F1 0.92 (4 scenarios) |
+| Faults fully prevented by fixing the suspects the pipeline named | 0% |
+| Upper bound: faults prevented by fixing the known true causes | 76% |
 
-The last two rows are the unusual ones. They compare what the model predicts a
+The intervention row is the unusual one. It compares what the model predicts a
 fault would do against what the fault really did, which is normally impossible.
+
+The last two rows belong together. Every coolant fault has two or three causes;
+root cause analysis names one of them first almost every time, but fills the
+next places with pump states that are consequences of the fault, so fixing its
+suspects silences one alarm and never all of them. The upper bound shows what
+the same reasoning achieves once the right causes are named. Closing that gap
+is the next piece of work.
+
+Settings were tuned on coolant. Every subsystem's results are in
+`results/all_subsystems.csv` after `python scripts/run_all_subsystems.py`.
 
 ## Getting started
 

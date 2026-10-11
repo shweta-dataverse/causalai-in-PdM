@@ -67,3 +67,20 @@ def test_change_logs_have_the_expected_columns(coolant):
     assert list(log.columns) == ["time_s", "node", "value", "type"]
     assert len(log) > 0
     assert log["time_s"].is_monotonic_increasing
+
+
+@pytest.mark.parametrize("subsystem", sorted(EXPECTED))
+def test_every_forced_variable_has_a_labelled_state(subsystem):
+    """The intervention check needs to know what each cause was forced to."""
+    for run in data.load_fault_runs(subsystem):
+        assert set(run.forced_states) == set(run.caused_by), run.name
+
+
+def test_faults_force_switches_both_ways():
+    """
+    Not every fault switches something off. Replaying all of them as "off"
+    was a real bug: it turned the coolant level fault into no fault at all.
+    """
+    states = {run.experiment: run.forced_states for run in data.load_fault_runs("coolant")}
+    assert states["exp_27"]["CLT_Level_lt_Min"] is True
+    assert states["exp_27"]["HP_Pump_Ok"] is False

@@ -179,8 +179,10 @@ if page == "Overview":
              help=f"Across {rca['faults_scored']} recorded faults.")
     c.metric("Fault predictions correct", f"{action['mean_f1']:.2f}",
              help="Alarms we predicted, against alarms that really fired.")
-    d.metric("Faults explained", f"{what_if['known_causes_success_rate']:.0%}",
-             help="Fixing the real causes made the fault disappear.")
+    d.metric("Faults prevented by our fix", f"{what_if['suspects_success_rate']:.0%}",
+             help="Fixing the suspects our root cause analysis named made every "
+                  "alarm disappear. Upper bound, fixing the known true causes: "
+                  f"{what_if['known_causes_success_rate']:.0%}.")
 
     st.divider()
     st.subheader("How far these results can be pushed")
@@ -454,7 +456,9 @@ elif page == "7 - Predicting an action":
 
     action = results.intervention_score
     a, b, c = st.columns(3)
-    a.metric("Fault scenarios replayed", action["scenarios_checked"])
+    a.metric("Fault scenarios replayed", action["scenarios_checked"],
+             help="One check per scenario. Small numbers mean each scenario "
+                  "moves the averages a lot.")
     b.metric("Alarms we predicted that really fired", f"{action['mean_precision']:.0%}")
     c.metric("Overall accuracy (F1)", f"{action['mean_f1']:.2f}")
 
@@ -468,7 +472,10 @@ elif page == "7 - Predicting an action":
     checks = pd.DataFrame(results.intervention_checks)
     if not checks.empty:
         display = pd.DataFrame({
-            "signals forced": checks["forced"].map(", ".join),
+            "scenario": checks["scenario"],
+            "runs": checks["runs"],
+            "signals forced": checks["forced_to"].map(
+                lambda forced: ", ".join(f"{name} = {value:g}" for name, value in forced.items())),
             "alarms we predicted": checks["alarms_predicted"].map(
                 lambda v: ", ".join(v) or "none"),
             "alarms that really fired": checks["alarms_actually_fired"].map(", ".join),
@@ -496,9 +503,12 @@ elif page == "8 - What would have prevented it":
     what_if = results.counterfactual_score
     a, b, c = st.columns(3)
     a.metric("Faults examined", what_if["faults_examined"])
-    b.metric("Fixing top suspect helped", what_if["top_suspect_silenced_an_alarm"])
-    c.metric("Fixing the real causes worked",
-             f"{what_if['known_causes_success_rate']:.0%}")
+    b.metric("Fixing our suspects prevented the fault",
+             f"{what_if['suspects_success_rate']:.0%}")
+    c.metric("Upper bound: fixing the true causes",
+             f"{what_if['known_causes_success_rate']:.0%}",
+             help="Uses the known answer, which a real plant never has. Shows "
+                  "what the model can do when root cause analysis is perfect.")
 
     st.subheader("Try a fix yourself")
     chosen, run_info, rca_result = pick_fault("Start from which fault?")
@@ -662,14 +672,16 @@ elif page == "How accurate is it":
     st.subheader("4. Explaining what would have prevented a fault")
     a, b, c = st.columns(3)
     a.metric("Faults examined", what_if["faults_examined"])
-    b.metric("Top suspect silenced an alarm", what_if["top_suspect_silenced_an_alarm"])
-    c.metric("Real causes prevented the fault",
+    b.metric("Fixing our suspects prevented the fault",
+             f"{what_if['suspects_success_rate']:.0%}")
+    c.metric("Upper bound: fixing the true causes",
              f"{what_if['known_causes_success_rate']:.0%}")
     st.caption(
-        "The last number is the honest test of the reasoning itself. If we fix "
-        "exactly the signals that were really tampered with, the fault should "
-        "disappear. Where it does not, it is because a link is missing from the "
-        "map - so the fix is to improve the map, not the reasoning.")
+        "The middle number is what the pipeline achieves on its own. The last "
+        "one uses the known answer, so it is an upper bound and a test of the "
+        "reasoning itself: if fixing exactly the tampered signals does not make "
+        "the fault disappear, a link is missing from the map - so the fix is to "
+        "improve the map, not the reasoning.")
 
     st.divider()
     for title, body, kind in explain.HONESTY_NOTES:

@@ -29,7 +29,7 @@ def coolant():
 @pytest.fixture(scope="session")
 def coolant_tables(coolant):
     """Preprocessed tables for the coolant subsystem."""
-    tables, labels, healthy = preprocess.build_tables(
+    tables, labels, healthy, _ = preprocess.build_tables(
         coolant.fault_runs, coolant.normal_recordings,
         coolant.expert_graph.variable_names, TEST_GRID_SECONDS, 20)
     return tables, labels, healthy

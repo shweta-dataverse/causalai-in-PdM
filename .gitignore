@@ -1,8 +1,9 @@
 # Datasets - downloaded, not stored in git
 data/
 
-# Pipeline outputs - all regenerable
-results/
+# Pipeline outputs - all regenerable, except the final tables the thesis cites
+results/*
+!results/final/
 reports/
 
 # Python

@@ -184,7 +184,7 @@ def ask_what_if(model: StructuralCausalModel, recording: pd.DataFrame,
 
 
 def validate_intervention(model: StructuralCausalModel, healthy_recording: pd.DataFrame,
-                          forced_variables: list[str], forced_to: float,
+                          forced: dict[str, float],
                           alarms_that_really_fired: list[str], alarm_names: list[str],
                           from_step: int = 5) -> dict:
     """
@@ -195,13 +195,16 @@ def validate_intervention(model: StructuralCausalModel, healthy_recording: pd.Da
     same variables in the model, and compare the alarms we predict against the
     alarms the machine actually raised.
 
-    This is the step that turns "here is a counterfactual" into "here is a
-    counterfactual that was checked", and it is possible only because this
-    dataset recorded its interventions.
+    `forced` holds the value each variable was really forced to, in table
+    units. It must come from the dataset's labels per variable: the faults
+    force some switches on and others off, so a single shared value would
+    replay a different fault from the one that happened.
+
+    This is the step that turns "here is a prediction" into "here is a
+    prediction that was checked", and it is possible only because this dataset
+    recorded its interventions.
     """
-    result = intervene(model, healthy_recording,
-                       {name: forced_to for name in forced_variables},
-                       alarm_names, from_step=from_step)
+    result = intervene(model, healthy_recording, forced, alarm_names, from_step=from_step)
 
     predicted = set(result.alarm_changes.loc[result.alarm_changes["fired_after"], "alarm"])
     actual = set(alarms_that_really_fired)
@@ -212,8 +215,8 @@ def validate_intervention(model: StructuralCausalModel, healthy_recording: pd.Da
     f1 = (2 * precision * recall / (precision + recall)) if (precision + recall) else 0.0
 
     return {
-        "forced": forced_variables,
-        "forced_to": forced_to,
+        "forced": sorted(forced),
+        "forced_to": forced,
         "alarms_predicted": sorted(predicted),
         "alarms_actually_fired": sorted(actual),
         "correctly_predicted": sorted(correct),

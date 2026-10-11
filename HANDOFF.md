@@ -93,20 +93,46 @@ Settings live in `settings.py`. There are no command-line flags.
 
 ## 4. Results obtained
 
-| Step | Metric | Coolant | Hydraulics |
-|---|---|---|---|
-| Graph validation | F1 | **0.71** | 0.46 |
-| | precision / recall | 0.86 / 0.60 | 0.75 / 0.33 |
-| | SHD | 5 | 14 |
-| Root cause | MAP@3 | 0.45 | 0.69 |
-| | top-1 hit rate | **0.92** | 0.88 |
-| | MRR | 0.96 | - |
-| Intervention | F1 | **0.83** | 0.64 |
-| | precision | 1.00 | - |
-| Counterfactual | prevention rate | **0.76** | **0.02** |
+Updated 2026-10-11 after the day-1 fixes (see `IMPLEMENTATION_PLAN.md`,
+Part A). Regenerate with `python scripts/run_all_subsystems.py`.
+
+| Step | Metric | Coolant | Hydraulics | Probe |
+|---|---|---|---|---|
+| Graph validation | F1 | **0.71** | 0.43 | 0.18 |
+| | precision / recall | 0.86 / 0.60 | 0.60 / 0.33 | 0.29 / 0.13 |
+| | SHD | 5 | 16 | 18 |
+| Root cause | MAP@3 | 0.45 | 0.60 | 0.46 |
+| | top-1 hit rate | **0.92** | 0.71 | 0.41 |
+| | recall@3 | 0.47 | 0.75 | 0.53 |
+| | MRR | 0.96 | 0.83 | 0.55 |
+| Intervention | F1 | **0.92** | 0.86 | 0.00 |
+| | scenarios | 4 | 9 | 6 |
+| Counterfactual | prevented by fixing our suspects | 0.00 | 0.17 | 0.24 |
+| | upper bound, fixing true causes | 0.76 | 0.20 | 0.38 |
 
 Settings used: 2.5 s grid, max lag 3, significance 0.001, discrete G-test,
-FDR correction, 60 healthy recordings.
+FDR correction, 60 healthy recordings. Tuned on coolant only; hydraulics and
+probe use them unchanged.
+
+What changed on day 1, and why the numbers moved:
+
+- Intervention checks now force each variable to its labelled value instead
+  of 0 for everything. Coolant 0.83 -> 0.92, hydraulics 0.64 -> 0.86.
+- The dataset labels the temperature switches in exp_10 and exp_15 as forced
+  True (healthy); every recording shows them going False, as the expert
+  graph's alarm rule requires. The recording is trusted there. These are the
+  only labels of 100 runs that contradict their recordings.
+- Hydraulic pressure is no longer filled with 0 (it is never logged in a
+  healthy recording); it is learned as 10000 from the pre-fault period, and
+  analog signals are binned once over all recordings. Hydraulics discovery now
+  takes seconds instead of ~36 minutes.
+- The counterfactual headline is now what the pipeline achieves with its own
+  suspects. On coolant that is 0%: root cause analysis names one true cause
+  first but fills places 2-3 with pump states (`LP_Pump_On`, `HP_Pump_isOff`)
+  that are consequences, so one alarm per fault is never silenced. That is
+  what T2 must fix.
+- Probe is weak everywhere (graph F1 0.18, intervention F1 0.0). The coolant
+  settings do not transfer to it.
 
 ### Published baselines (verified from the paper's Table 3)
 
@@ -207,11 +233,12 @@ faults force 2-3 signals at once. This is the clearest thing to improve.
 counterfactuals fail. Signals that vary in only a handful of recordings are
 hard to recover.
 
-**Only coolant and hydraulics have been run.** Probe is untouched.
+**All three subsystems now run** (`scripts/run_all_subsystems.py`, under
+two minutes in total). Probe is the weakest - see section 4.
 
-**The tuning table was lost** when `results/` was cleared. The Settings page of
-the dashboard needs `results/tuning_results.csv`; re-run
-`python scripts/tune_settings.py` (~25 min) to restore it.
+**The tuning table was regenerated** on 2026-10-11 and is kept in
+`results/final/tuning_results.csv` (tracked in git). It confirms the chosen
+settings. `python scripts/tune_settings.py` takes about 5 minutes.
 
 **Step 7 compares against a healthy recording**, which is a different run from
 the fault recording. Using the fault recording's own pre-fault period as the

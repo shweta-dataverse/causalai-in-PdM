@@ -67,7 +67,9 @@ def main() -> int:
     print(f"\nSaying what would have prevented each fault")
     print(f"  faults examined               {what_if['faults_examined']}")
     print(f"  fixing top suspect helped     {what_if['top_suspect_silenced_an_alarm']}")
-    print(f"  fixing the real causes worked {what_if['known_causes_prevented_fault']} "
+    print(f"  fixing our suspects prevented {what_if['suspects_prevented_fault']} "
+          f"({what_if['suspects_success_rate']:.0%})")
+    print(f"  upper bound, true causes      {what_if['known_causes_prevented_fault']} "
           f"({what_if['known_causes_success_rate']:.0%})")
 
     print(f"\nFinished in {result.seconds_taken:.1f} seconds.")
