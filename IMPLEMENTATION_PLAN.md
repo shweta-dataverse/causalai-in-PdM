@@ -65,6 +65,27 @@ and full are held out.
 - **Root cause analysis is now the bottleneck.** Coolant: the model prevents
   100% of faults given the right causes, 0% with our suspects. T2 first on
   day 3.
+- **Why the full machine would not finish, and the fix.** On the full machine
+  a cycle starting or stopping switches dozens of signals in the same step:
+  2,863 signal pairs move together, a median of 71 same-moment neighbours per
+  signal (coolant: 8). PCMCI+'s same-moment phase deliberately ignores the
+  combination limit, so it faced ~2.3 million tests (13-45 hours per run).
+  Fix: **screen, then discover** (`SAME_MOMENT_PARTNERS = 5`) - each signal
+  may be linked within the same step only to its 5 strongest same-moment
+  partners; lagged links are unscreened. For the thesis:
+  - Precedent: Sparse Candidate algorithm (Friedman, Nachman, Pe'er, UAI
+    1999); Sure Independence Screening (Fan and Lv, JRSS-B 2008); MMHC
+    (Tsamardinos et al., Machine Learning 2006).
+  - Evidence it does not distort: identical graphs with and without the
+    screen on coolant, hydraulics and probe.
+  - What it can cost, full machine: of 83 learnable expert links, 34 fall
+    outside the screened pairs, but 22 of those show no same-moment
+    dependence in the data at all (the full search drops them at its first
+    test). Screening alone costs at most 12, and those can still be found
+    with a delay. Ten partners instead of five would recover only 2 of them.
+- **A stale process from an earlier session** (`/tmp/run_full.py`, old code)
+  had been running for 19.5 hours and would have overwritten
+  `results/cache/pipeline_result_full.pkl` on finishing. Stopped.
 
 ---
 
