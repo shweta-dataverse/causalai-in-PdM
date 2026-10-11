@@ -22,10 +22,19 @@ Two choices here matter more than any other:
 
 Recordings are passed as separate realisations rather than glued end to end,
 which would invent causal links across the join between two recordings.
+
+Two ways of using the recordings are offered. `discover` pools them all into
+one run, which has the most statistical power. `discover_by_vote` runs on
+groups of recordings separately and keeps the links most groups agree on,
+which is how the causRCA authors worked and is far more robust to one odd
+recording.
 """
 
 from __future__ import annotations
 
+import random
+from collections import defaultdict
+from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
 
 import pandas as pd
@@ -85,9 +94,15 @@ def discover(
     max_conditions: int = 3,
     max_combinations: int = 2,
     max_parents_conditioned: int | None = 6,
+    alarms: list[str] | None = None,
 ) -> CausalGraph:
     """
     Learn a causal graph from a set of recordings.
+
+    Passing `alarms` applies one piece of domain knowledge: an alarm is the
+    controller reporting a condition, so it can be an effect but never a cause.
+    Links out of an alarm are never tested, which removes a large share of the
+    search and every chance of a false "alarm causes pump" link.
 
     Setting `significance` to None lets PCMCI+ choose it from a standard range
     using its own model-selection score, instead of us guessing.
@@ -120,6 +135,7 @@ def discover(
         max_conds_py=max_parents_conditioned,
         max_conds_px=max_parents_conditioned,
         fdr_method=multiple_test_correction,
+        link_assumptions=alarms_only_as_effects(variables, alarms, max_lag) if alarms else None,
     )
 
     return CausalGraph(
@@ -132,10 +148,159 @@ def discover(
             "multiple_test_correction": multiple_test_correction,
             "max_conditions": max_conditions,
             "max_combinations": max_combinations,
+            "alarms_only_as_effects": bool(alarms),
             "recordings_used": len(tables),
         },
         link_type_counts=_count_link_types(result),
     )
+
+
+def discover_by_vote(
+    tables: list[pd.DataFrame],
+    labels: list[str],
+    variables: list[str],
+    grouping: str = "replicates",
+    vote_threshold: float = 0.5,
+    workers: int | None = None,
+    seed: int = 0,
+    **settings,
+) -> CausalGraph:
+    """
+    Learn a graph on groups of recordings separately and keep what most agree on.
+
+    `grouping` decides which recordings vote together:
+
+      "recording"   every recording votes alone. This is the causRCA authors'
+                    protocol, kept for a like-for-like comparison. It has a
+                    built-in weakness: a healthy recording never shows an alarm
+                    and a fault recording only shows its own, so no alarm link
+                    can win half the votes.
+
+      "replicates"  every group holds one run of each fault scenario plus a
+                    share of the healthy recordings - a repeat of the whole
+                    experiment. A link is kept when it replicates.
+
+    `vote_threshold` is fixed at 0.5 in advance, as in the paper. Choosing it by
+    scoring against the expert graph would tune on the answer.
+
+    Groups are independent, so they run in parallel. Each kept link records the
+    share of groups that found it, which is a confidence per link.
+    """
+    groups = _vote_groups(labels, grouping, seed)
+    jobs = [([tables[i] for i in group], variables, settings) for group in groups]
+    with ProcessPoolExecutor(max_workers=workers) as pool:
+        found = list(pool.map(_discover_group, jobs))
+
+    finished = [edges for edges in found if edges is not None]
+    votes: dict[tuple[str, str], list] = defaultdict(list)
+    for edges in finished:
+        for (cause, effect), rows in edges.groupby(["cause", "effect"]):
+            votes[(cause, effect)].append(rows.iloc[0])   # strongest lag in this group
+
+    rows = []
+    for (cause, effect), found_in in votes.items():
+        share = len(found_in) / max(len(finished), 1)
+        if share < vote_threshold:
+            continue
+        lags = pd.Series([int(r["lag"]) for r in found_in])
+        strengths = pd.Series([float(r["strength"]) for r in found_in])
+        rows.append({"cause": cause, "effect": effect, "lag": int(lags.mode().iloc[0]),
+                     "strength": round(float(strengths.median()), 4),
+                     "vote_share": round(share, 3)})
+
+    edges = pd.DataFrame(rows, columns=["cause", "effect", "lag", "strength", "vote_share"])
+    edges["abs_strength"] = edges["strength"].abs()
+    edges = edges.sort_values(["vote_share", "abs_strength"], ascending=False, ignore_index=True)
+    return CausalGraph(
+        edges=edges,
+        variables=list(variables),
+        settings={**settings, "grouping": grouping, "vote_threshold": vote_threshold,
+                  "groups": len(groups), "groups_finished": len(finished),
+                  "recordings_used": len(tables)},
+        link_type_counts=pd.Series(dtype=int),
+    )
+
+
+def _vote_groups(labels: list[str], grouping: str, seed: int) -> list[list[int]]:
+    """Split recordings into voting groups, by their labels ("normal/..." or "fault/exp_X/run_Y")."""
+    if grouping == "recording":
+        return [[i] for i in range(len(labels))]
+    if grouping != "replicates":
+        raise ValueError(f"Unknown grouping '{grouping}'. Use 'recording' or 'replicates'.")
+
+    by_scenario: dict[str, list[int]] = defaultdict(list)
+    healthy: list[int] = []
+    for i, label in enumerate(labels):
+        if label.startswith("fault/"):
+            by_scenario[label.split("/")[1]].append(i)
+        else:
+            healthy.append(i)
+
+    # As many replicates as a typical scenario has runs. Scenarios with more
+    # runs put two in some replicates; with fewer, they miss some.
+    runs_per_scenario = sorted(len(runs) for runs in by_scenario.values())
+    replicates = max(2, runs_per_scenario[len(runs_per_scenario) // 2])
+    shuffle = random.Random(seed)
+    groups: list[list[int]] = [[] for _ in range(replicates)]
+    for scenario in sorted(by_scenario):
+        runs = by_scenario[scenario][:]
+        shuffle.shuffle(runs)
+        for position, index in enumerate(runs):
+            groups[position % replicates].append(index)
+    shuffle.shuffle(healthy)
+    for position, index in enumerate(healthy):
+        groups[position % replicates].append(index)
+    return groups
+
+
+def _discover_group(job) -> pd.DataFrame | None:
+    tables, variables, settings = job
+    try:
+        return discover(tables, variables, **settings).edges
+    except Exception:
+        # A group too small or too uniform for the test simply casts no vote.
+        return None
+
+
+def alarms_only_as_effects(variables: list[str], alarms: list[str], max_lag: int) -> dict:
+    """
+    Tell PCMCI+ which links it may test: everything, except out of an alarm.
+
+    Tigramite wants every allowed link listed. "-?>" means "may exist, and if
+    it does it points this way"; "o?o" leaves both existence and direction to
+    the data. A same-moment link is declared from both ends, so a signal that
+    may switch an alarm on at once appears as "-?>" at the alarm and "<?-" at
+    the signal. An alarm may still depend on its own past.
+
+    The cost: interlocks - an alarm that switches a pump off or puts the
+    machine into an error state - cannot be learned. That is 5 of 18 expert
+    links in hydraulics and 19 of 104 on the full machine. Allowing alarms to
+    act one step later recovered none of them (at a 2.5 s grid interlocks act
+    within the same step) and added false links on probe. In a plant, interlock
+    actions are written down in the controller's alarm configuration, so they
+    would be added as known links rather than learned.
+    """
+    alarm_set = set(alarms)
+    assumptions = {}
+    for j, effect in enumerate(variables):
+        links = {}
+        for i, cause in enumerate(variables):
+            for lag in range(0, max_lag + 1):
+                if i == j and lag == 0:
+                    continue
+                if lag > 0:
+                    if cause not in alarm_set or i == j:
+                        links[(i, -lag)] = "-?>"
+                elif cause in alarm_set and effect in alarm_set:
+                    continue
+                elif effect in alarm_set:
+                    links[(i, 0)] = "-?>"
+                elif cause in alarm_set:
+                    links[(i, 0)] = "<?-"
+                else:
+                    links[(i, 0)] = "o?o"
+        assumptions[j] = links
+    return assumptions
 
 
 def _collect_edges(result: dict, variables: list[str]) -> pd.DataFrame:

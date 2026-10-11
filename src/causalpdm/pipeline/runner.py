@@ -91,9 +91,18 @@ def run(subsystem: str = "coolant",
         multiple_test_correction: str = "fdr_bh",
         min_rows: int = 20,
         top_k: int = 3,
+        alarms_only_as_effects: bool = True,
+        hold_out_scenario: str | None = None,
         use_cache: bool = True,
         verbose: bool = True) -> PipelineResult:
-    """Run every stage and return the collected results."""
+    """
+    Run every stage and return the collected results.
+
+    `hold_out_scenario` answers the question a plant actually faces: can the
+    system handle a fault type it has never seen? That scenario's recordings
+    are removed before the graph and the equations are learned, and only that
+    scenario is then diagnosed and replayed.
+    """
     started = time.time()
     paths.make_output_folders()
 
@@ -102,6 +111,8 @@ def run(subsystem: str = "coolant",
         "seconds_per_step": seconds_per_step, "max_lag": max_lag,
         "significance": significance, "independence_test": independence_test,
         "multiple_test_correction": multiple_test_correction, "min_rows": min_rows,
+        "alarms_only_as_effects": alarms_only_as_effects,
+        "hold_out_scenario": hold_out_scenario,
     }
 
     # --- load ------------------------------------------------------------
@@ -117,6 +128,17 @@ def run(subsystem: str = "coolant",
     tables, labels, healthy, cut_points = preprocess.build_tables(
         dataset.fault_runs, dataset.normal_recordings, variables,
         seconds_per_step, min_rows)
+    fault_tables = {label.split("/", 1)[1]: table
+                    for label, table in zip(labels, tables) if label.startswith("fault")}
+    test_runs = dataset.fault_runs
+    if hold_out_scenario is not None:
+        test_runs = [run for run in dataset.fault_runs if run.experiment == hold_out_scenario]
+        if not test_runs:
+            raise ValueError(f"No scenario '{hold_out_scenario}' in {subsystem}.")
+        kept = [i for i, label in enumerate(labels)
+                if not label.startswith(f"fault/{hold_out_scenario}/")]
+        tables = [tables[i] for i in kept]
+        labels = [labels[i] for i in kept]
     if verbose:
         _say("2 build tables", f"{len(tables)} recordings on a "
              f"{seconds_per_step}s grid", started)
@@ -127,7 +149,7 @@ def run(subsystem: str = "coolant",
     # the old tables.
     cache_file = paths.CACHE_DIR / (
         f"graph_{subsystem}_{seconds_per_step}_{max_lag}_{significance}_"
-        f"{multiple_test_correction}_{_fingerprint(tables)}.pkl")
+        f"{multiple_test_correction}_{alarms_only_as_effects}_{_fingerprint(tables)}.pkl")
     if use_cache and cache_file.exists():
         graph = pickle.loads(cache_file.read_bytes())
         if verbose:
@@ -136,7 +158,8 @@ def run(subsystem: str = "coolant",
         graph = discovery.discover(
             tables, variables, max_lag=max_lag, significance=significance,
             independence_test=independence_test,
-            multiple_test_correction=multiple_test_correction)
+            multiple_test_correction=multiple_test_correction,
+            alarms=alarm_names if alarms_only_as_effects else None)
         cache_file.write_bytes(pickle.dumps(graph))
         if verbose:
             _say("3 discover", f"{len(graph.edges)} causal links found", started)
@@ -159,10 +182,8 @@ def run(subsystem: str = "coolant",
              f"{causal_model.summary()['accuracy'].mean():.2f}", started)
 
     # --- root cause analysis ---------------------------------------------
-    fault_tables = {label.split("/", 1)[1]: table
-                    for label, table in zip(labels, tables) if label.startswith("fault")}
     rca_results, scored_pairs = [], []
-    for run_info in dataset.fault_runs:
+    for run_info in test_runs:
         table = fault_tables.get(run_info.name)
         if table is None:
             continue
@@ -183,7 +204,7 @@ def run(subsystem: str = "coolant",
     if healthy_table is not None:
         runs_per_scenario = Counter(run.experiment for run in dataset.fault_runs)
         seen = set()
-        for run_info in dataset.fault_runs:
+        for run_info in test_runs:
             if run_info.experiment in seen:
                 continue
             seen.add(run_info.experiment)

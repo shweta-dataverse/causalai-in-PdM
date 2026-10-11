@@ -95,6 +95,18 @@ MULTIPLE_TEST_CORRECTION = "fdr_bh"
 MAX_CONDITIONS = 3
 MAX_COMBINATIONS = 2
 
+# Domain knowledge: an alarm is the controller reporting a condition, so it can
+# be an effect but never a cause. Links out of alarms are not even tested.
+#
+# Measured, pooled discovery (F1 against the expert graph):
+#   coolant    0.71 -> 0.74     hydraulics 0.43 -> 0.64     probe 0.18 -> 0.30
+#
+# The cost: interlocks - an alarm that switches a pump off or sets the error
+# state - cannot be learned (5 of 18 hydraulics links, 19 of 104 on the full
+# machine). In a plant those actions are documented in the alarm configuration
+# and would be added as known links.
+ALARMS_ONLY_AS_EFFECTS = True
+
 # Every causRCA coolant variable is True/False, so the independence test must
 # handle discrete data. A test built for continuous values would be wrong here.
 # Options: "discrete" (CMIsymb) or "continuous" (ParCorr).
