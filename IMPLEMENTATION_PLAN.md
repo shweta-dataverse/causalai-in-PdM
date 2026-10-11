@@ -91,6 +91,14 @@ and full are held out.
   the full machine's analog signals have 3-4 states. Running uncapped in the
   background (option A). If not done by the freeze, report the measured
   scaling as a finding.
+- **Full machine - final outcome.** Stopped by hand after ~5 hours, still in
+  the final phase: 72,000 tests in the first 6 minutes, then the rate fell
+  from ~190 to under 2 tests per second as tests conditioned on up to 8
+  signals, some with 3-4 states. Fewer than 125,000 tests in 5 hours, no end
+  in sight. Evidence: `results/final/full_graph_scaling.log`. Reported as a
+  finding: plant-wide pooled PCMCI+ on co-switching PLC signals exceeds a
+  single machine's compute budget even with screening and conditioning caps.
+  **T5 (Full RCA setting) is cut** - it needs the full-machine graph.
 
 **Day 3 (2026-10-11):**
 
