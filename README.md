@@ -38,31 +38,32 @@ So every claim this pipeline makes can be scored against something recorded.
 
 ## How well it works
 
-Measured on the coolant subsystem, against the dataset's own ground truth:
+Measured against the dataset's own ground truth. Settings were tuned on
+coolant only; hydraulics and probe use them unchanged.
 
-| What was measured | Result |
-|---|---|
-| Causal links found that are real | 86% |
-| Real causal links found | 60% |
-| Causal map accuracy (F1) | 0.71 |
-| Correct cause ranked first | 92% of faults |
-| MAP@3 for root cause | 0.45 |
-| Alarms correctly predicted when a fault is simulated | F1 0.92 (4 scenarios) |
-| Faults fully prevented by fixing the suspects the pipeline named | 0% |
-| Upper bound: faults prevented by fixing the known true causes | 76% |
+| What was measured | Coolant | Hydraulics | Probe |
+|---|---|---|---|
+| Causal map accuracy (F1) | 0.74 | 0.62 | 0.32 |
+| Right cause ranked first | 100% | 100% | 68% |
+| MAP@3 for root cause | 1.00 | 1.00 | 0.69 |
+| Alarms correctly predicted when a fault is simulated (F1) | 1.00 | 1.00 | 0.17 |
+| Chance that our own fix would have prevented the fault | 94% | 89% | 76% |
+| Smallest fix found is exactly the injected cause | 92% | 90% | 18% |
 
-The intervention row is the unusual one. It compares what the model predicts a
-fault would do against what the fault really did, which is normally impossible.
+For comparison, the best published causal map accuracy on these subsystems is
+0.29 / 0.40 / 0.37 (Mehling et al. 2026). Even with untuned settings this
+pipeline reaches 0.56 / 0.53 / 0.42. The best published root cause results
+(1.00 / 0.98 / 0.63) needed the engineers' graph; these use a learned one.
 
-The last two rows belong together. Every coolant fault has two or three causes;
-root cause analysis names one of them first almost every time, but fills the
-next places with pump states that are consequences of the fault, so fixing its
-suspects silences one alarm and never all of them. The upper bound shows what
-the same reasoning achieves once the right causes are named. Closing that gap
-is the next piece of work.
+The intervention row and the last row are the unusual ones. They compare what
+the model says a fault or a fix would do against what really happened, which
+is normally impossible.
 
-Settings were tuned on coolant. Every subsystem's results are in
-`results/all_subsystems.csv` after `python scripts/run_all_subsystems.py`.
+On faults of a type the model never saw, hydraulics stays strong (root cause
+MAP@3 0.96, intervention F1 0.96); coolant drops where an alarm only ever
+fired in the held-out scenario. Probe is the weak subsystem throughout.
+
+All numbers: `HANDOFF.md`, section 4.
 
 ## Getting started
 

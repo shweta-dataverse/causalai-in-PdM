@@ -83,6 +83,43 @@ and full are held out.
     dependence in the data at all (the full search drops them at its first
     test). Screening alone costs at most 12, and those can still be found
     with a delay. Ten partners instead of five would recover only 2 of them.
+- **Full machine: still not finished.** Screening made the same-moment phase
+  tractable, but the final MCI phase conditions on the causes of both ends;
+  at 6 per end each test took over 0.2 s (hours). Capped at 3 per end
+  (`MAX_PARENTS_CONDITIONED`, coolant unchanged, hydraulics 0.64 -> 0.62,
+  probe 0.30 -> 0.32) it still slows to ~5 tests/s late in the phase, because
+  the full machine's analog signals have 3-4 states. Running uncapped in the
+  background (option A). If not done by the freeze, report the measured
+  scaling as a finding.
+
+**Day 3 (2026-10-11):**
+
+- **T2 done - root cause analysis fixed.** Suspects are the learned-graph
+  causes of the alarms that fired (CausTR's idea, with our learned graph
+  instead of the expert one; no labels). MAP@3 coolant 0.45 -> 1.00,
+  hydraulics 0.58 -> 1.00, probe 0.43 -> 0.69. Published best Sub: 1.00 /
+  0.98 / 0.63, all with the expert graph. Held out: hydraulics 0.96, coolant
+  0.66 (top-1 still 1.00), probe 0.47.
+- **"Upper bound" was wrong.** Fixing suspects can prevent more faults than
+  fixing the true causes (probe 0.91 vs 0.59), because holding a downstream
+  signal healthy also silences an alarm. Renamed everywhere; prevention is
+  always read with root cause accuracy.
+- **B1 done** (`scripts/protocol_comparison.py`). Untuned settings already
+  beat the published best on every subsystem (0.56 / 0.53 / 0.42 vs 0.29 /
+  0.40 / 0.37): the gain is the method, not tuning. Tuning helps coolant and
+  hydraulics and hurts probe. Label-free choice of significance by held-out
+  prediction picks looser levels and lower F1 - good prediction is not the
+  right causes. Tigramite has no automatic level for the discrete test.
+- **C1 done.** Hidden randomness is sampled (200 draws) instead of taking the
+  midpoint; every draw replays the recording exactly. Counterfactuals are now
+  probabilities, and per-step alarm risk curves are kept for the dashboard.
+  P(our fix prevents the fault): 0.94 / 0.89 / 0.76.
+- **C2 done** (`scripts/minimal_fixes.py`). Smallest fix (<= 3 signals,
+  P >= 0.9) found for 92% / 90% / 35% of faults, and it is exactly the
+  injected cause in 92% / 90% / 18% - a counterfactual explanation checked
+  against ground truth.
+- Known limitation spotted: the SCM treats every variable as on/off, so the
+  3-state hydraulic pressure is reduced to "above or below 0.5". Say so.
 - **A stale process from an earlier session** (`/tmp/run_full.py`, old code)
   had been running for 19.5 hours and would have overwritten
   `results/cache/pipeline_result_full.pkl` on finishing. Stopped.

@@ -93,36 +93,54 @@ Settings live in `settings.py`. There are no command-line flags.
 
 ## 4. Results obtained
 
-Updated 2026-10-11 after day 2 (see `IMPLEMENTATION_PLAN.md`,
-Part A). Regenerate with `python scripts/run_all_subsystems.py`.
+Updated 2026-10-11 after day 3 (see `IMPLEMENTATION_PLAN.md` status).
+Regenerate with `python scripts/run_all_subsystems.py`, then
+`scripts/held_out_scenarios.py`, `scripts/protocol_comparison.py`,
+`scripts/minimal_fixes.py`.
 
 | Step | Metric | Coolant | Hydraulics | Probe |
 |---|---|---|---|---|
-| Graph validation | F1 | **0.74** | **0.64** | 0.30 |
-| | precision / recall | 0.78 / 0.70 | 0.90 / 0.50 | 0.60 / 0.20 |
-| | SHD | 5 | 10 | 14 |
-| Root cause | MAP@3 | 0.45 | 0.63 | 0.42 |
-| | top-1 hit rate | **0.92** | 0.68 | 0.38 |
-| | recall@3 | 0.47 | 0.77 | 0.47 |
-| | MRR | 0.96 | 0.82 | 0.51 |
+| Graph validation | F1 | **0.74** | **0.62** | 0.32 |
+| | correct / found | 7 / 9 | 8 / 8 | 3 / 4 |
+| | SHD | 5 | 10 | 13 |
+| Root cause | MAP@3 | **1.00** | **1.00** | 0.69 |
+| | top-1 hit rate | **1.00** | **1.00** | 0.68 |
 | Intervention | F1 | **1.00** | **1.00** | 0.17 |
 | | scenarios | 4 | 9 | 6 |
-| Counterfactual | prevented by fixing our suspects | 0.00 | 0.46 | 0.41 |
-| | upper bound, fixing true causes | 1.00 | 0.88 | 0.59 |
+| Counterfactual | P(our own fix prevents the fault) | **0.94** | **0.89** | 0.76 |
+| | P(fixing the true causes prevents it) | 0.94 | 0.89 | 0.48 |
+| Minimal fix | found (at most 3 signals) | 0.92 | 0.90 | 0.35 |
+| | fix is exactly the injected cause | **0.92** | **0.90** | 0.18 |
 
-Held out, one fault scenario at a time (`scripts/held_out_scenarios.py`):
+"Fixing the true causes" is NOT an upper bound: holding a downstream signal
+healthy can also silence an alarm (probe: 0.76 vs 0.48). Read prevention
+together with root cause accuracy.
+
+Held out, one fault scenario at a time - the model never saw that fault type:
 
 | | Coolant | Hydraulics | Probe |
 |---|---|---|---|
-| Graph F1, mean ± sd over folds | 0.69 ± 0.04 | 0.62 ± 0.03 | 0.30 ± 0.07 |
-| Root cause MAP@3 / top-1 | 0.32 / 0.72 | 0.59 / 0.71 | 0.48 / 0.44 |
-| Intervention F1 | 0.73 | 0.96 | 0.00 |
-| Prevented by our suspects / upper bound | 0.00 / 0.24 | 0.37 / 0.78 | 0.15 / 0.03 |
+| Graph F1, mean ± sd over folds | 0.69 ± 0.03 | 0.61 ± 0.02 | 0.29 ± 0.08 |
+| Root cause MAP@3 / top-1 | 0.66 / 1.00 | **0.96 / 1.00** | 0.47 / 0.35 |
+| Intervention F1 | 0.73 | **0.96** | 0.00 |
+| Our fix prevented the fault | 0.24 | **0.78** | 0.38 |
+
+Where the gain comes from (`results/protocol_comparison.csv`, graph F1):
+
+| | Coolant | Hydraulics | Probe |
+|---|---|---|---|
+| Paper's best, any algorithm | 0.29 | 0.40 | 0.37 |
+| Ours, untuned (1 s grid, lag 1, alpha 0.05) | 0.56 | 0.53 | 0.42 |
+| Ours, tuned on coolant | 0.74 | 0.62 | 0.32 |
+| Ours, label-free (alpha by held-out prediction) | 0.64 | 0.52 | 0.25 |
+| Their protocol (each recording votes) at our settings | 0.00 | 0.00 | 0.00 |
+
+Even untuned, the method beats the published best on every subsystem.
 
 Settings used: 2.5 s grid, max lag 3, significance 0.001, discrete G-test,
-FDR correction, alarms only as effects, 60 healthy recordings. Tuned on
-coolant only; hydraulics and probe use them unchanged. Day-2 changes and
-findings are listed at the top of `IMPLEMENTATION_PLAN.md`.
+FDR correction, alarms only as effects, 5 same-moment partners, 3 conditioned
+causes per end, suspects = learned causes of the fired alarms, 60 healthy
+recordings. Tuned on coolant only; hydraulics and probe use them unchanged.
 
 What changed on day 1, and why the numbers moved:
 
