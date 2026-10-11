@@ -1,0 +1,101 @@
+subsystem,fault,true_causes,fix,probability,size,found,exact,only_true,sets_tried
+coolant,exp_22/run_1,"['HP_Pump_Ok', 'LT_Level_Ok']","['HP_Pump_Ok', 'LT_Level_Ok']",0.9,2,True,True,True,9
+coolant,exp_22/run_2,"['HP_Pump_Ok', 'LT_Level_Ok']","['HP_Pump_Ok', 'LT_Level_Ok']",0.94,2,True,True,True,9
+coolant,exp_22/run_3,"['HP_Pump_Ok', 'LT_Level_Ok']","['HP_Pump_Ok', 'LT_Level_Ok']",0.9,2,True,True,True,9
+coolant,exp_22/run_4,"['HP_Pump_Ok', 'LT_Level_Ok']","['HP_Pump_Ok', 'LT_Level_Ok']",0.91,2,True,True,True,9
+coolant,exp_22/run_5,"['HP_Pump_Ok', 'LT_Level_Ok']","['HP_Pump_Ok', 'LT_Level_Ok']",0.88,2,False,False,False,92
+coolant,exp_22/run_6,"['HP_Pump_Ok', 'LT_Level_Ok']","['HP_Pump_Ok', 'LT_Level_Ok']",0.87,2,False,False,False,92
+coolant,exp_27/run_1,"['CLT_Level_lt_Min', 'HP_Pump_Ok']","['CLT_Level_lt_Min', 'HP_Pump_Ok']",0.99,2,True,True,True,9
+coolant,exp_27/run_2,"['CLT_Level_lt_Min', 'HP_Pump_Ok']","['CLT_Level_lt_Min', 'HP_Pump_Ok']",0.96,2,True,True,True,9
+coolant,exp_27/run_3,"['CLT_Level_lt_Min', 'HP_Pump_Ok']","['CLT_Level_lt_Min', 'HP_Pump_Ok']",0.97,2,True,True,True,9
+coolant,exp_27/run_4,"['CLT_Level_lt_Min', 'HP_Pump_Ok']","['CLT_Level_lt_Min', 'HP_Pump_Ok']",0.99,2,True,True,True,9
+coolant,exp_27/run_5,"['CLT_Level_lt_Min', 'HP_Pump_Ok']","['CLT_Level_lt_Min', 'HP_Pump_Ok']",0.97,2,True,True,True,9
+coolant,exp_27/run_6,"['CLT_Level_lt_Min', 'HP_Pump_Ok']","['CLT_Level_lt_Min', 'HP_Pump_Ok']",1.0,2,True,True,True,9
+coolant,exp_27/run_7,"['CLT_Level_lt_Min', 'HP_Pump_Ok']","['CLT_Level_lt_Min', 'HP_Pump_Ok']",0.98,2,True,True,True,9
+coolant,exp_28/run_1,"['CLF_Filter_Ok', 'F_Filter_Ok', 'LP_Pump_Ok']","['CLF_Filter_Ok', 'F_Filter_Ok', 'LP_Pump_Ok']",0.95,3,True,True,True,37
+coolant,exp_28/run_2,"['CLF_Filter_Ok', 'F_Filter_Ok', 'LP_Pump_Ok']","['CLF_Filter_Ok', 'F_Filter_Ok', 'LP_Pump_Ok']",0.94,3,True,True,True,37
+coolant,exp_28/run_3,"['CLF_Filter_Ok', 'F_Filter_Ok', 'LP_Pump_Ok']","['CLF_Filter_Ok', 'F_Filter_Ok', 'LP_Pump_Ok']",0.9,3,True,True,True,37
+coolant,exp_28/run_4,"['CLF_Filter_Ok', 'F_Filter_Ok', 'LP_Pump_Ok']","['CLF_Filter_Ok', 'F_Filter_Ok', 'LP_Pump_Ok']",0.95,3,True,True,True,37
+coolant,exp_28/run_5,"['CLF_Filter_Ok', 'F_Filter_Ok', 'LP_Pump_Ok']","['CLF_Filter_Ok', 'F_Filter_Ok', 'LP_Pump_Ok']",0.91,3,True,True,True,37
+coolant,exp_28/run_6,"['CLF_Filter_Ok', 'F_Filter_Ok', 'LP_Pump_Ok']","['CLF_Filter_Ok', 'F_Filter_Ok', 'LP_Pump_Ok']",0.91,3,True,True,True,37
+coolant,exp_35/run_1,"['CLF_Filter_Ok', 'LP_Pump_Ok']","['CLF_Filter_Ok', 'LP_Pump_Ok']",0.93,2,True,True,True,9
+coolant,exp_35/run_2,"['CLF_Filter_Ok', 'LP_Pump_Ok']","['CLF_Filter_Ok', 'LP_Pump_Ok']",0.96,2,True,True,True,9
+coolant,exp_35/run_3,"['CLF_Filter_Ok', 'LP_Pump_Ok']","['CLF_Filter_Ok', 'LP_Pump_Ok']",0.9,2,True,True,True,9
+coolant,exp_35/run_4,"['CLF_Filter_Ok', 'LP_Pump_Ok']","['CLF_Filter_Ok', 'LP_Pump_Ok']",0.95,2,True,True,True,9
+coolant,exp_35/run_5,"['CLF_Filter_Ok', 'LP_Pump_Ok']","['CLF_Filter_Ok', 'LP_Pump_Ok']",0.92,2,True,True,True,9
+coolant,exp_35/run_6,"['CLF_Filter_Ok', 'LP_Pump_Ok']","['CLF_Filter_Ok', 'LP_Pump_Ok']",0.97,2,True,True,True,9
+hydraulics,exp_10/run_1,"['Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']","['Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']",1.0,2,True,True,True,9
+hydraulics,exp_10/run_2,"['Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']","['Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']",1.0,2,True,True,True,9
+hydraulics,exp_10/run_3,"['Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']","['Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']",1.0,2,True,True,True,9
+hydraulics,exp_10/run_4,"['Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']","['Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']",1.0,2,True,True,True,9
+hydraulics,exp_10/run_5,"['Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']","['Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']",1.0,2,True,True,True,9
+hydraulics,exp_12/run_1,['Hyd_Level_Ok'],['Hyd_Level_Ok'],0.99,1,True,True,True,1
+hydraulics,exp_12/run_2,['Hyd_Level_Ok'],['Hyd_Level_Ok'],0.99,1,True,True,True,1
+hydraulics,exp_12/run_3,['Hyd_Level_Ok'],['Hyd_Level_Ok'],0.98,1,True,True,True,1
+hydraulics,exp_12/run_4,['Hyd_Level_Ok'],['Hyd_Level_Ok'],0.97,1,True,True,True,1
+hydraulics,exp_12/run_5,['Hyd_Level_Ok'],['Hyd_Level_Ok'],0.98,1,True,True,True,1
+hydraulics,exp_13/run_1,['Hyd_Pump_Ok'],['Hyd_Pump_Ok'],0.95,1,True,True,True,1
+hydraulics,exp_13/run_2,['Hyd_Pump_Ok'],['Hyd_Pump_Ok'],0.96,1,True,True,True,1
+hydraulics,exp_13/run_3,['Hyd_Pump_Ok'],['Hyd_Pump_Ok'],0.97,1,True,True,True,1
+hydraulics,exp_13/run_4,['Hyd_Pump_Ok'],['Hyd_Pump_Ok'],1.0,1,True,True,True,1
+hydraulics,exp_14/run_1,"['Hyd_Level_Ok', 'Hyd_Pressure']","['Hyd_Level_Ok', 'Hyd_Pressure']",0.93,2,True,True,True,9
+hydraulics,exp_14/run_2,"['Hyd_Level_Ok', 'Hyd_Pressure']","['Hyd_Level_Ok', 'Hyd_Pressure']",0.96,2,True,True,True,9
+hydraulics,exp_14/run_3,"['Hyd_Level_Ok', 'Hyd_Pressure']","['Hyd_Level_Ok', 'Hyd_Pressure']",0.92,2,True,True,True,9
+hydraulics,exp_14/run_4,"['Hyd_Level_Ok', 'Hyd_Pressure']","['Hyd_Level_Ok', 'Hyd_Pressure']",0.93,2,True,True,True,9
+hydraulics,exp_15/run_1,"['Hyd_Pressure', 'Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']","['Hyd_Pressure', 'Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']",0.95,3,True,True,True,37
+hydraulics,exp_15/run_2,"['Hyd_Pressure', 'Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']","['Hyd_Pressure', 'Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']",0.95,3,True,True,True,37
+hydraulics,exp_15/run_3,"['Hyd_Pressure', 'Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']","['Hyd_Pressure', 'Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']",0.95,3,True,True,True,37
+hydraulics,exp_15/run_4,"['Hyd_Pressure', 'Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']","['Hyd_Pressure', 'Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']",0.91,3,True,True,True,37
+hydraulics,exp_15/run_5,"['Hyd_Pressure', 'Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']","['Hyd_Pressure', 'Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']",0.96,3,True,True,True,37
+hydraulics,exp_18/run_1,"['Hyd_Level_Ok', 'Hyd_Pump_Ok']","['Hyd_Level_Ok', 'Hyd_Pump_Ok']",0.99,2,True,True,True,9
+hydraulics,exp_18/run_2,"['Hyd_Level_Ok', 'Hyd_Pump_Ok']","['Hyd_Level_Ok', 'Hyd_Pump_Ok']",0.97,2,True,True,True,9
+hydraulics,exp_18/run_3,"['Hyd_Level_Ok', 'Hyd_Pump_Ok']","['Hyd_Level_Ok', 'Hyd_Pump_Ok']",0.94,2,True,True,True,9
+hydraulics,exp_18/run_4,"['Hyd_Level_Ok', 'Hyd_Pump_Ok']","['Hyd_Level_Ok', 'Hyd_Pump_Ok']",0.95,2,True,True,True,9
+hydraulics,exp_18/run_5,"['Hyd_Level_Ok', 'Hyd_Pump_Ok']","['Hyd_Level_Ok', 'Hyd_Pump_Ok']",0.97,2,True,True,True,9
+hydraulics,exp_20/run_1,"['Hyd_Filter_Ok', 'Hyd_Pump_Ok']","['Hyd_Filter_Ok', 'Hyd_Pump_Ok']",0.98,2,True,True,True,9
+hydraulics,exp_20/run_2,"['Hyd_Filter_Ok', 'Hyd_Pump_Ok']","['Hyd_Filter_Ok', 'Hyd_Pump_Ok']",0.99,2,True,True,True,9
+hydraulics,exp_20/run_3,"['Hyd_Filter_Ok', 'Hyd_Pump_Ok']","['Hyd_Filter_Ok', 'Hyd_Pump_Ok']",1.0,2,True,True,True,9
+hydraulics,exp_8/run_1,['Hyd_Pressure'],['Hyd_Pressure'],0.96,1,True,True,True,1
+hydraulics,exp_8/run_2,['Hyd_Pressure'],['Hyd_Pressure'],1.0,1,True,True,True,1
+hydraulics,exp_8/run_3,['Hyd_Pressure'],['Hyd_Pressure'],0.95,1,True,True,True,1
+hydraulics,exp_8/run_4,['Hyd_Pressure'],['Hyd_Pressure'],0.98,1,True,True,True,1
+hydraulics,exp_8/run_5,['Hyd_Pressure'],['Hyd_Pressure'],0.96,1,True,True,True,1
+hydraulics,exp_9/run_1,['Hyd_Pressure'],[],0.0,0,False,False,False,92
+hydraulics,exp_9/run_2,['Hyd_Pressure'],[],0.0,0,False,False,False,92
+hydraulics,exp_9/run_3,['Hyd_Pressure'],[],0.0,0,False,False,False,92
+hydraulics,exp_9/run_4,['Hyd_Pressure'],['Hyd_Pressure'],0.94,1,True,True,True,1
+hydraulics,exp_9/run_5,['Hyd_Pressure'],['Hyd_Pressure'],0.72,1,False,False,False,92
+probe,exp_1/run_1,['MPA_WorkPos'],['MPA_InitPos'],0.72,1,False,False,False,92
+probe,exp_1/run_2,['MPA_WorkPos'],['MPA_InitPos'],0.77,1,False,False,False,92
+probe,exp_1/run_3,['MPA_WorkPos'],['MPA_InitPos'],0.76,1,False,False,False,92
+probe,exp_1/run_4,['MPA_WorkPos'],"['MPA_InitPos', 'MPA_WorkPos']",0.83,2,False,False,False,92
+probe,exp_1/run_5,['MPA_WorkPos'],['MPA_InitPos'],0.75,1,False,False,False,92
+probe,exp_1/run_6,['MPA_WorkPos'],['MPA_InitPos'],0.68,1,False,False,False,92
+probe,exp_2_3/run_1,['MPA_InitPos'],"['MPA_InitPos', 'MPA_WorkPos']",0.76,2,False,False,False,92
+probe,exp_2_3/run_2,['MPA_InitPos'],"['MPA_InitPos', 'MPA_WorkPos']",0.75,2,False,False,False,92
+probe,exp_2_3/run_3,['MPA_InitPos'],"['MPA_InitPos', 'MPA_WorkPos']",0.74,2,False,False,False,92
+probe,exp_2_3/run_4,['MPA_InitPos'],['MPA_InitPos'],0.77,1,False,False,False,92
+probe,exp_2_3/run_5,['MPA_InitPos'],['MPA_InitPos'],0.79,1,False,False,False,92
+probe,exp_2_3/run_6,['MPA_InitPos'],['MPA_InitPos'],0.72,1,False,False,False,92
+probe,exp_2_3/run_7,['MPA_InitPos'],['MPA_InitPos'],0.62,1,False,False,False,92
+probe,exp_2_3/run_8,['MPA_InitPos'],['MPA_InitPos'],0.58,1,False,False,False,92
+probe,exp_4/run_1,['MPA_WorkPos'],['MPA_InitPos'],0.9,1,True,False,False,1
+probe,exp_4/run_2,['MPA_WorkPos'],['MPA_WorkPos'],0.98,1,True,True,True,1
+probe,exp_4/run_3,['MPA_WorkPos'],['MPA_WorkPos'],0.97,1,True,True,True,1
+probe,exp_4/run_4,['MPA_WorkPos'],['MPA_WorkPos'],0.96,1,True,True,True,1
+probe,exp_4/run_5,['MPA_WorkPos'],['MPA_WorkPos'],0.96,1,True,True,True,1
+probe,exp_4/run_6,['MPA_WorkPos'],['MPA_WorkPos'],0.98,1,True,True,True,1
+probe,exp_5/run_1,['MPA_InitPos'],['MPA_WorkPos'],0.94,1,True,False,False,1
+probe,exp_5/run_2,['MPA_InitPos'],['MPA_WorkPos'],0.97,1,True,False,False,1
+probe,exp_5/run_3,['MPA_InitPos'],['MPA_WorkPos'],0.98,1,True,False,False,1
+probe,exp_5/run_4,['MPA_InitPos'],['MPA_WorkPos'],0.98,1,True,False,False,1
+probe,exp_5/run_5,['MPA_InitPos'],['MPA_InitPos'],0.99,1,True,True,True,1
+probe,exp_5/run_6,['MPA_InitPos'],['MPA_WorkPos'],0.97,1,True,False,False,2
+probe,exp_6/run_1,"['MPA_InitPos', 'MPA_WorkPos']",[],0.0,0,False,False,False,92
+probe,exp_6/run_2,"['MPA_InitPos', 'MPA_WorkPos']",[],0.0,0,False,False,False,92
+probe,exp_6/run_3,"['MPA_InitPos', 'MPA_WorkPos']",[],0.0,0,False,False,False,92
+probe,exp_7/run_1,"['MPA_InitPos', 'MPA_WorkPos']","['MPA_InitPos', 'MPA_WorkPos']",0.77,2,False,False,False,92
+probe,exp_7/run_2,"['MPA_InitPos', 'MPA_WorkPos']",['MPA_InitPos'],0.74,1,False,False,False,92
+probe,exp_7/run_3,"['MPA_InitPos', 'MPA_WorkPos']","['MPA_InitPos', 'MPA_WorkPos']",0.79,2,False,False,False,92
+probe,exp_7/run_4,"['MPA_InitPos', 'MPA_WorkPos']","['MPA_InitPos', 'MPA_WorkPos']",0.67,2,False,False,False,92
+probe,exp_7/run_5,"['MPA_InitPos', 'MPA_WorkPos']","['MPA_InitPos', 'MPA_WorkPos']",0.82,2,False,False,False,92

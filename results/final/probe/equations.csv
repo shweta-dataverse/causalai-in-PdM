@@ -1,0 +1,12 @@
+variable,number_of_causes,accuracy,balanced_accuracy,share_of_time_on,causes
+MPA_A_701125,3,0.999,1.0,0.017,"MPA_WorkPos (same step), MPA_InitPos (same step), MPA_A_701125 (1 steps back)"
+MPA_A_701124,2,0.997,0.972,0.024,"MPA_InitPos (1 steps back), MPA_A_701124 (1 steps back)"
+MP_Inactive,1,0.988,0.983,0.772,MP_Inactive (1 steps back)
+MPA_toInitPos,1,0.987,0.984,0.716,MPA_toInitPos (1 steps back)
+MPA_toWorkPos,1,0.987,0.984,0.285,MPA_toWorkPos (1 steps back)
+MPC_close,1,0.987,0.985,0.696,MPC_close (1 steps back)
+MPC_Closed,1,0.987,0.985,0.695,MPC_Closed (1 steps back)
+MPC_isOpen,1,0.987,0.985,0.305,MPC_isOpen (1 steps back)
+MPC_open,1,0.987,0.985,0.303,MPC_open (1 steps back)
+MPA_InitPos,1,0.986,0.984,0.711,MPA_InitPos (1 steps back)
+MPA_WorkPos,2,0.986,0.983,0.288,"MPA_InitPos (same step), MPA_WorkPos (1 steps back)"

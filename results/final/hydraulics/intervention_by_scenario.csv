@@ -1,0 +1,10 @@
+scenario,runs,forced,forced_to,alarms_predicted,alarms_actually_fired,correctly_predicted,missed,false_alarms,precision,recall,f1
+exp_10,5,"['Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']","{'Hyd_Temp_lt_70': 0.0, 'Hyd_Temp_lt_80': 0.0}","['Hyd_A_700203', 'Hyd_A_700204']","['Hyd_A_700203', 'Hyd_A_700204']","['Hyd_A_700203', 'Hyd_A_700204']",[],[],1.0,1.0,1.0
+exp_12,5,['Hyd_Level_Ok'],{'Hyd_Level_Ok': 0.0},"['Hyd_A_700205', 'Hyd_A_700206']","['Hyd_A_700205', 'Hyd_A_700206']","['Hyd_A_700205', 'Hyd_A_700206']",[],[],1.0,1.0,1.0
+exp_13,4,['Hyd_Pump_Ok'],{'Hyd_Pump_Ok': 0.0},['Hyd_A_700208'],['Hyd_A_700208'],['Hyd_A_700208'],[],[],1.0,1.0,1.0
+exp_14,4,"['Hyd_Level_Ok', 'Hyd_Pressure']","{'Hyd_Level_Ok': 0.0, 'Hyd_Pressure': 0.0}","['Hyd_A_700202', 'Hyd_A_700205', 'Hyd_A_700206']","['Hyd_A_700202', 'Hyd_A_700205', 'Hyd_A_700206']","['Hyd_A_700202', 'Hyd_A_700205', 'Hyd_A_700206']",[],[],1.0,1.0,1.0
+exp_15,5,"['Hyd_Pressure', 'Hyd_Temp_lt_70', 'Hyd_Temp_lt_80']","{'Hyd_Temp_lt_70': 0.0, 'Hyd_Temp_lt_80': 0.0, 'Hyd_Pressure': 0.0}","['Hyd_A_700202', 'Hyd_A_700203', 'Hyd_A_700204']","['Hyd_A_700202', 'Hyd_A_700203', 'Hyd_A_700204']","['Hyd_A_700202', 'Hyd_A_700203', 'Hyd_A_700204']",[],[],1.0,1.0,1.0
+exp_18,5,"['Hyd_Level_Ok', 'Hyd_Pump_Ok']","{'Hyd_Level_Ok': 0.0, 'Hyd_Pump_Ok': 0.0}","['Hyd_A_700205', 'Hyd_A_700206', 'Hyd_A_700208']","['Hyd_A_700205', 'Hyd_A_700206', 'Hyd_A_700208']","['Hyd_A_700205', 'Hyd_A_700206', 'Hyd_A_700208']",[],[],1.0,1.0,1.0
+exp_20,3,"['Hyd_Filter_Ok', 'Hyd_Pump_Ok']","{'Hyd_Filter_Ok': 0.0, 'Hyd_Pump_Ok': 0.0}","['Hyd_A_700207', 'Hyd_A_700208']","['Hyd_A_700207', 'Hyd_A_700208']","['Hyd_A_700207', 'Hyd_A_700208']",[],[],1.0,1.0,1.0
+exp_8,5,['Hyd_Pressure'],{'Hyd_Pressure': 0.0},['Hyd_A_700202'],['Hyd_A_700202'],['Hyd_A_700202'],[],[],1.0,1.0,1.0
+exp_9,5,['Hyd_Pressure'],{'Hyd_Pressure': 0.0},['Hyd_A_700202'],['Hyd_A_700202'],['Hyd_A_700202'],[],[],1.0,1.0,1.0

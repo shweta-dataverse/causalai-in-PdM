@@ -1,0 +1,16 @@
+{
+  "subsystem": "coolant",
+  "variables": 15,
+  "recordings_used": 85,
+  "expert_edges": 10,
+  "edges_found": 9,
+  "edges_correct": 7,
+  "graph_f1": 0.737,
+  "root_cause_map@3": 1.0,
+  "root_cause_top1": 1.0,
+  "intervention_f1": 1.0,
+  "intervention_scenarios": 4,
+  "counterfactual_success": 0.938,
+  "counterfactual_with_true_causes": 0.938,
+  "seconds_taken": 23.8
+}

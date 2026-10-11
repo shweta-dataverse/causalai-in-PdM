@@ -1,0 +1,18 @@
+variable,number_of_causes,accuracy,balanced_accuracy,share_of_time_on,causes
+Hyd_A_700204,3,1.0,1.0,0.002,"Hyd_Temp_lt_80 (1 steps back), Hyd_Temp_lt_80 (2 steps back), Hyd_A_700204 (1 steps back)"
+Hyd_A_700207,2,1.0,1.0,0.001,"Hyd_Filter_Ok (1 steps back), Hyd_A_700207 (1 steps back)"
+Hyd_A_700205,2,1.0,0.996,0.0,"Hyd_Level_Ok (same step), Hyd_A_700205 (1 steps back)"
+Hyd_Temp_lt_80,1,0.999,0.891,0.997,Hyd_Temp_lt_80 (1 steps back)
+Hyd_Pump_Ok,1,0.999,0.914,0.996,Hyd_Pump_Ok (1 steps back)
+Hyd_Temp_lt_70,1,0.999,0.968,0.99,Hyd_Temp_lt_70 (1 steps back)
+Hyd_Filter_Ok,1,0.999,0.925,0.999,Hyd_Filter_Ok (1 steps back)
+Hyd_A_700206,3,0.999,0.999,0.009,"Hyd_Level_Ok (same step), Hyd_Level_Ok (1 steps back), Hyd_A_700206 (1 steps back)"
+Hyd_A_700203,2,0.999,1.0,0.01,"Hyd_Temp_lt_70 (same step), Hyd_A_700203 (1 steps back)"
+Hyd_A_700208,3,0.999,1.0,0.005,"Hyd_Pump_Ok (same step), Hyd_Pump_Ok (1 steps back), Hyd_A_700208 (1 steps back)"
+Hyd_A_700202,3,0.998,0.99,0.023,"Hyd_Pressure (1 steps back), Hyd_Pressure (same step), Hyd_A_700202 (1 steps back)"
+Hyd_Level_Ok,1,0.998,0.948,0.991,Hyd_Level_Ok (1 steps back)
+Hyd_Pressure,1,0.997,0.954,0.985,Hyd_Pressure (1 steps back)
+Hyd_Pump_isOff,1,0.996,0.963,0.031,Hyd_Pump_isOff (1 steps back)
+Hyd_Pump_On,1,0.996,0.963,0.969,Hyd_Pump_On (1 steps back)
+Hyd_IsEnabled,1,0.992,0.799,0.989,Hyd_IsEnabled (1 steps back)
+Hyd_Valve_P_Up,2,0.968,0.91,0.098,"Hyd_Pressure (same step), Hyd_Valve_P_Up (1 steps back)"

@@ -1,0 +1,4 @@
+subsystem,faults,found,size,exact,only_true
+coolant,25,0.92,2.24,0.92,0.92
+hydraulics,41,0.902,1.585,0.902,0.902
+probe,34,0.353,1.147,0.176,0.176

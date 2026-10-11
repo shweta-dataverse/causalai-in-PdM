@@ -1,0 +1,7 @@
+scenario,runs,forced,forced_to,alarms_predicted,alarms_actually_fired,correctly_predicted,missed,false_alarms,precision,recall,f1
+exp_1,6,['MPA_WorkPos'],{'MPA_WorkPos': 0.0},[],['MPA_A_701124'],[],['MPA_A_701124'],[],0.0,0.0,0.0
+exp_2_3,8,['MPA_InitPos'],{'MPA_InitPos': 0.0},[],['MPA_A_701124'],[],['MPA_A_701124'],[],0.0,0.0,0.0
+exp_4,6,['MPA_WorkPos'],{'MPA_WorkPos': 1.0},[],['MPA_A_701125'],[],['MPA_A_701125'],[],0.0,0.0,0.0
+exp_5,6,['MPA_InitPos'],{'MPA_InitPos': 1.0},['MPA_A_701125'],['MPA_A_701125'],['MPA_A_701125'],[],[],1.0,1.0,1.0
+exp_6,3,"['MPA_InitPos', 'MPA_WorkPos']","{'MPA_InitPos': 1.0, 'MPA_WorkPos': 0.0}",[],['MPA_A_701124'],[],['MPA_A_701124'],[],0.0,0.0,0.0
+exp_7,5,"['MPA_InitPos', 'MPA_WorkPos']","{'MPA_InitPos': 0.0, 'MPA_WorkPos': 1.0}",[],['MPA_A_701124'],[],['MPA_A_701124'],[],0.0,0.0,0.0

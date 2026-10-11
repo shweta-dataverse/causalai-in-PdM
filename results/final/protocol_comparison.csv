@@ -1,0 +1,22 @@
+subsystem,settings,protocol,significance,f1,precision,recall,shd,seconds
+coolant,untuned,pooled,0.05,0.556,0.625,0.5,8,4.5
+coolant,untuned,replicate vote,0.05,0.5,0.667,0.4,8,2.3
+coolant,label-free,pooled,0.05,0.64,0.533,0.8,9,4.4
+coolant,label-free,replicate vote,0.05,0.824,1.0,0.7,3,2.5
+coolant,tuned,pooled,0.001,0.737,0.778,0.7,5,2.9
+coolant,tuned,replicate vote,0.001,0.75,1.0,0.6,4,2.3
+coolant,tuned,authors' protocol,0.001,0.0,0.0,0.0,10,3.2
+hydraulics,untuned,pooled,0.05,0.529,0.562,0.5,16,8.5
+hydraulics,untuned,replicate vote,0.05,0.364,1.0,0.222,14,2.7
+hydraulics,label-free,pooled,0.01,0.519,0.778,0.389,13,5.5
+hydraulics,label-free,replicate vote,0.01,0.5,1.0,0.333,12,2.5
+hydraulics,tuned,pooled,0.001,0.615,1.0,0.444,10,4.2
+hydraulics,tuned,replicate vote,0.001,0.286,1.0,0.167,15,2.3
+hydraulics,tuned,authors' protocol,0.001,0.0,0.0,0.0,18,3.5
+probe,untuned,pooled,0.05,0.421,0.348,0.533,22,24.7
+probe,untuned,replicate vote,0.05,0.2,0.4,0.133,16,3.4
+probe,label-free,pooled,0.01,0.25,0.333,0.2,18,11.9
+probe,label-free,replicate vote,0.01,0.125,1.0,0.067,14,2.8
+probe,tuned,pooled,0.001,0.316,0.75,0.2,13,7.0
+probe,tuned,replicate vote,0.001,0.125,1.0,0.067,14,2.5
+probe,tuned,authors' protocol,0.001,0.0,0.0,0.0,15,3.6

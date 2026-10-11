@@ -128,6 +128,21 @@ and full are held out.
   against ground truth.
 - Known limitation spotted: the SCM treats every variable as on/off, so the
   3-state hydraulic pressure is reduced to "above or below 0.5". Say so.
+**Day 4 (2026-10-12):**
+
+- **Full machine: stopped after ~5 h** without finishing; reported as a
+  measured finding (`results/final/full_graph_scaling.log`). T5 cut.
+- **T4 done** (`scripts/compare_root_cause.py`). Baro, CausTR, PageRank ported
+  from the authors' code; 8 of 9 reproduce their published Sub MAP@3
+  exactly (PageRank hydraulics 1.00 vs 0.98: networkx vs scikit-network).
+  CausTR on our learned graph matches CausTR on the expert graph (better on
+  probe, 0.78 vs 0.58); ours is best or tied on coolant and hydraulics.
+- **T6 done** (`scripts/ablation.py`). Every decision except FDR correction
+  earns part of the result; table in `HANDOFF.md`.
+- **T7 covered** by held-out folds: graph F1 sd 0.03 / 0.02 / 0.08 across
+  scenarios (`results/final/held_out_by_scenario.csv`).
+- **Freeze**: `scripts/reproduce_all.py` regenerates every table into
+  `results/final/`; tagged `code-freeze`.
 - **A stale process from an earlier session** (`/tmp/run_full.py`, old code)
   had been running for 19.5 hours and would have overwritten
   `results/cache/pipeline_result_full.pkl` on finishing. Stopped.

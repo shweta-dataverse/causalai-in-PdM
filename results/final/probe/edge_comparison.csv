@@ -1,0 +1,17 @@
+cause,effect,verdict
+MPA_InitPos,MPA_A_701124,found
+MPA_InitPos,MPA_A_701125,found
+MPA_InitPos,MPC_close,missed
+MPA_WorkPos,MPA_A_701124,missed
+MPA_WorkPos,MPA_A_701125,found
+MPA_WorkPos,MP_Inactive,missed
+MPA_toInitPos,MPA_A_701124,missed
+MPA_toInitPos,MPA_InitPos,missed
+MPA_toInitPos,MPA_toWorkPos,missed
+MPA_toWorkPos,MPA_A_701124,missed
+MPA_toWorkPos,MPA_WorkPos,missed
+MPC_close,MPC_Closed,missed
+MPC_close,MPC_open,missed
+MPC_isOpen,MPA_toWorkPos,missed
+MPC_open,MPC_isOpen,missed
+MPA_InitPos,MPA_WorkPos,false alarm

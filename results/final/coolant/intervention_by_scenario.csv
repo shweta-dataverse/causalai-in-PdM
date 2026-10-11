@@ -1,0 +1,5 @@
+scenario,runs,forced,forced_to,alarms_predicted,alarms_actually_fired,correctly_predicted,missed,false_alarms,precision,recall,f1
+exp_22,6,"['HP_Pump_Ok', 'LT_Level_Ok']","{'HP_Pump_Ok': 0.0, 'LT_Level_Ok': 0.0}","['HP_A_700304', 'LT_A_700317']","['HP_A_700304', 'LT_A_700317']","['HP_A_700304', 'LT_A_700317']",[],[],1.0,1.0,1.0
+exp_27,7,"['CLT_Level_lt_Min', 'HP_Pump_Ok']","{'CLT_Level_lt_Min': 1.0, 'HP_Pump_Ok': 0.0}","['CLT_A_700310', 'HP_A_700304']","['CLT_A_700310', 'HP_A_700304']","['CLT_A_700310', 'HP_A_700304']",[],[],1.0,1.0,1.0
+exp_28,6,"['CLF_Filter_Ok', 'F_Filter_Ok', 'LP_Pump_Ok']","{'CLF_Filter_Ok': 0.0, 'F_Filter_Ok': 0.0, 'LP_Pump_Ok': 0.0}","['CLF_A_700307', 'F_A_700313', 'LP_A_700301']","['CLF_A_700307', 'F_A_700313', 'LP_A_700301']","['CLF_A_700307', 'F_A_700313', 'LP_A_700301']",[],[],1.0,1.0,1.0
+exp_35,6,"['CLF_Filter_Ok', 'LP_Pump_Ok']","{'CLF_Filter_Ok': 0.0, 'LP_Pump_Ok': 0.0}","['CLF_A_700307', 'LP_A_700301']","['CLF_A_700307', 'LP_A_700301']","['CLF_A_700307', 'LP_A_700301']",[],[],1.0,1.0,1.0

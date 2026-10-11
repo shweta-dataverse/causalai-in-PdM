@@ -1,0 +1,4 @@
+subsystem,scenarios,graph_f1_mean,graph_f1_sd,root_cause_map@3,root_cause_top1,intervention_f1,counterfactual_success,prevention_probability_our_fix,prevention_probability_true_causes,counterfactual_with_true_causes
+coolant,4,0.694,0.034,0.66,1.0,0.734,0.24,0.226,0.226,0.24
+probe,6,0.287,0.076,0.466,0.353,0.0,0.382,0.298,0.027,0.029
+hydraulics,9,0.606,0.019,0.963,1.0,0.963,0.78,0.771,0.771,0.78

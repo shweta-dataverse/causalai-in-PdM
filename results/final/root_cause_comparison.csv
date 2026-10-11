@@ -1,0 +1,19 @@
+subsystem,method,faults,map@3,top1,published_map@3
+coolant,TimeRank,25,0.853,0.84,0.853
+coolant,Baro,25,0.88,1.0,0.88
+coolant,PageRank (expert graph),25,1.0,1.0,1.0
+coolant,CausTR (expert graph),25,1.0,1.0,1.0
+coolant,CausTR (our learned graph),25,1.0,1.0,
+coolant,"ours (learned graph, no labels)",25,1.0,1.0,
+hydraulics,TimeRank,41,0.472,0.512,0.472
+hydraulics,Baro,41,0.746,0.634,0.746
+hydraulics,PageRank (expert graph),41,1.0,1.0,0.984
+hydraulics,CausTR (expert graph),41,0.744,0.756,0.744
+hydraulics,CausTR (our learned graph),41,0.744,0.756,
+hydraulics,"ours (learned graph, no labels)",41,1.0,1.0,
+probe,TimeRank,34,0.471,0.471,0.471
+probe,Baro,34,0.632,0.618,0.632
+probe,PageRank (expert graph),34,0.265,0.0,0.265
+probe,CausTR (expert graph),34,0.583,0.471,0.583
+probe,CausTR (our learned graph),34,0.779,0.824,
+probe,"ours (learned graph, no labels)",34,0.691,0.676,

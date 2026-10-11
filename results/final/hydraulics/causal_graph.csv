@@ -1,0 +1,13 @@
+cause,effect,lag,strength,abs_strength
+Hyd_Temp_lt_70,Hyd_A_700203,0,165.3167,165.3167
+Hyd_Pump_Ok,Hyd_A_700208,0,103.0083,103.0083
+Hyd_Level_Ok,Hyd_A_700205,0,55.6985,55.6985
+Hyd_Level_Ok,Hyd_A_700206,0,47.5377,47.5377
+Hyd_Temp_lt_80,Hyd_A_700204,1,37.3565,37.3565
+Hyd_Pressure,Hyd_Valve_P_Up,0,33.1487,33.1487
+Hyd_Pressure,Hyd_A_700202,1,31.4493,31.4493
+Hyd_Pressure,Hyd_A_700202,0,22.581,22.581
+Hyd_Temp_lt_80,Hyd_A_700204,2,21.0239,21.0239
+Hyd_Pump_Ok,Hyd_A_700208,1,19.5029,19.5029
+Hyd_Level_Ok,Hyd_A_700206,1,18.2644,18.2644
+Hyd_Filter_Ok,Hyd_A_700207,1,16.9084,16.9084

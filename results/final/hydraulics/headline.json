@@ -1,0 +1,16 @@
+{
+  "subsystem": "hydraulics",
+  "variables": 17,
+  "recordings_used": 101,
+  "expert_edges": 18,
+  "edges_found": 8,
+  "edges_correct": 8,
+  "graph_f1": 0.615,
+  "root_cause_map@3": 1.0,
+  "root_cause_top1": 1.0,
+  "intervention_f1": 1.0,
+  "intervention_scenarios": 9,
+  "counterfactual_success": 0.894,
+  "counterfactual_with_true_causes": 0.894,
+  "seconds_taken": 32.3
+}

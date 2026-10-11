@@ -1,0 +1,16 @@
+{
+  "subsystem": "probe",
+  "variables": 11,
+  "recordings_used": 94,
+  "expert_edges": 15,
+  "edges_found": 4,
+  "edges_correct": 3,
+  "graph_f1": 0.316,
+  "root_cause_map@3": 0.691,
+  "root_cause_top1": 0.676,
+  "intervention_f1": 0.167,
+  "intervention_scenarios": 6,
+  "counterfactual_success": 0.755,
+  "counterfactual_with_true_causes": 0.477,
+  "seconds_taken": 18.9
+}

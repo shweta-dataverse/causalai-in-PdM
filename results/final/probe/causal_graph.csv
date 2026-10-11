@@ -1,0 +1,5 @@
+cause,effect,lag,strength,abs_strength
+MPA_WorkPos,MPA_A_701125,0,89.8913,89.8913
+MPA_InitPos,MPA_WorkPos,0,53.5344,53.5344
+MPA_InitPos,MPA_A_701124,1,33.0461,33.0461
+MPA_InitPos,MPA_A_701125,0,17.4223,17.4223

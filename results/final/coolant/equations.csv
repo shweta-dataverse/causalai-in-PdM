@@ -1,0 +1,16 @@
+variable,number_of_causes,accuracy,balanced_accuracy,share_of_time_on,causes
+CLF_Filter_Ok,1,0.999,0.984,0.976,CLF_Filter_Ok (1 steps back)
+F_A_700313,3,0.999,1.0,0.008,"F_Filter_Ok (2 steps back), LP_Pump_Ok (same step), F_A_700313 (1 steps back)"
+F_Filter_Ok,1,0.999,0.975,0.993,F_Filter_Ok (1 steps back)
+LT_A_700317,2,0.999,1.0,0.015,"LT_Level_Ok (same step), LT_A_700317 (1 steps back)"
+LT_Level_Ok,1,0.999,0.981,0.99,LT_Level_Ok (1 steps back)
+LP_A_700301,2,0.999,1.0,0.016,"LP_Pump_Ok (same step), LP_A_700301 (1 steps back)"
+LP_Pump_Ok,1,0.999,0.972,0.987,LP_Pump_Ok (1 steps back)
+CLT_A_700310,2,0.999,1.0,0.005,"CLT_Level_lt_Min (same step), CLT_A_700310 (1 steps back)"
+CLT_Level_lt_Min,1,0.999,0.952,0.005,CLT_Level_lt_Min (1 steps back)
+CLF_A_700307,2,0.998,1.0,0.025,"CLF_Filter_Ok (2 steps back), CLF_A_700307 (1 steps back)"
+HP_A_700304,2,0.998,1.0,0.022,"HP_Pump_Ok (same step), HP_A_700304 (1 steps back)"
+HP_Pump_Ok,1,0.998,0.974,0.984,HP_Pump_Ok (1 steps back)
+LT_Pump_Ok,1,0.996,0.986,0.926,LT_Pump_Ok (1 steps back)
+HP_Pump_isOff,2,0.993,0.993,0.575,"LP_Pump_On (1 steps back), HP_Pump_isOff (1 steps back)"
+LP_Pump_On,3,0.978,0.872,0.041,"HP_Pump_isOff (same step), HP_Pump_isOff (1 steps back), LP_Pump_On (1 steps back)"

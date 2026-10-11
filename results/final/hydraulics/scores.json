@@ -1,0 +1,64 @@
+{
+  "graph": {
+    "edges_found": 8,
+    "edges_expected": 18,
+    "correct": 8,
+    "wrong": 0,
+    "missed": 10,
+    "precision": 1.0,
+    "recall": 0.444,
+    "f1": 0.615,
+    "shd": 10
+  },
+  "graph_ignoring_direction": {
+    "edges_found": 8,
+    "edges_expected": 18,
+    "correct": 8,
+    "wrong": 0,
+    "missed": 10,
+    "precision": 1.0,
+    "recall": 0.444,
+    "f1": 0.615,
+    "shd": 10
+  },
+  "root_cause": {
+    "faults_scored": 41,
+    "precision@3": 0.553,
+    "recall@3": 1.0,
+    "map@3": 1.0,
+    "mean_reciprocal_rank": 1.0,
+    "found_in_top_1": 1.0
+  },
+  "intervention": {
+    "scenarios_checked": 9,
+    "mean_precision": 1.0,
+    "mean_recall": 1.0,
+    "mean_f1": 1.0
+  },
+  "counterfactual": {
+    "faults_examined": 41,
+    "top_suspect_silenced_an_alarm": 36,
+    "suspects_prevented_fault": 36,
+    "suspects_success_rate": 0.878,
+    "known_causes_prevented_fault": 36,
+    "known_causes_success_rate": 0.878,
+    "suspects_prevention_probability": 0.894,
+    "true_causes_prevention_probability": 0.894
+  },
+  "settings": {
+    "subsystem": "hydraulics",
+    "normal_recordings": 60,
+    "seconds_per_step": 2.5,
+    "max_lag": 3,
+    "significance": 0.001,
+    "independence_test": "discrete",
+    "multiple_test_correction": "fdr_bh",
+    "min_rows": 20,
+    "alarms_only_as_effects": true,
+    "same_moment_partners": 5,
+    "max_parents_conditioned": 3,
+    "suspects": "parents",
+    "balanced_decisions": true,
+    "hold_out_scenario": null
+  }
+}

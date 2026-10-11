@@ -1,0 +1,64 @@
+{
+  "graph": {
+    "edges_found": 9,
+    "edges_expected": 10,
+    "correct": 7,
+    "wrong": 2,
+    "missed": 3,
+    "precision": 0.778,
+    "recall": 0.7,
+    "f1": 0.737,
+    "shd": 5
+  },
+  "graph_ignoring_direction": {
+    "edges_found": 8,
+    "edges_expected": 10,
+    "correct": 7,
+    "wrong": 1,
+    "missed": 3,
+    "precision": 0.875,
+    "recall": 0.7,
+    "f1": 0.778,
+    "shd": 4
+  },
+  "root_cause": {
+    "faults_scored": 25,
+    "precision@3": 0.747,
+    "recall@3": 1.0,
+    "map@3": 1.0,
+    "mean_reciprocal_rank": 1.0,
+    "found_in_top_1": 1.0
+  },
+  "intervention": {
+    "scenarios_checked": 4,
+    "mean_precision": 1.0,
+    "mean_recall": 1.0,
+    "mean_f1": 1.0
+  },
+  "counterfactual": {
+    "faults_examined": 25,
+    "top_suspect_silenced_an_alarm": 25,
+    "suspects_prevented_fault": 25,
+    "suspects_success_rate": 1.0,
+    "known_causes_prevented_fault": 25,
+    "known_causes_success_rate": 1.0,
+    "suspects_prevention_probability": 0.938,
+    "true_causes_prevention_probability": 0.938
+  },
+  "settings": {
+    "subsystem": "coolant",
+    "normal_recordings": 60,
+    "seconds_per_step": 2.5,
+    "max_lag": 3,
+    "significance": 0.001,
+    "independence_test": "discrete",
+    "multiple_test_correction": "fdr_bh",
+    "min_rows": 20,
+    "alarms_only_as_effects": true,
+    "same_moment_partners": 5,
+    "max_parents_conditioned": 3,
+    "suspects": "parents",
+    "balanced_decisions": true,
+    "hold_out_scenario": null
+  }
+}

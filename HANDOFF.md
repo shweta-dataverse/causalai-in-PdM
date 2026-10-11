@@ -123,7 +123,7 @@ Held out, one fault scenario at a time - the model never saw that fault type:
 | Graph F1, mean ± sd over folds | 0.69 ± 0.03 | 0.61 ± 0.02 | 0.29 ± 0.08 |
 | Root cause MAP@3 / top-1 | 0.66 / 1.00 | **0.96 / 1.00** | 0.47 / 0.35 |
 | Intervention F1 | 0.73 | **0.96** | 0.00 |
-| Our fix prevented the fault | 0.24 | **0.78** | 0.38 |
+| P(our fix prevents the fault) | 0.23 | **0.77** | 0.30 |
 
 Where the gain comes from (`results/protocol_comparison.csv`, graph F1):
 
@@ -136,6 +136,39 @@ Where the gain comes from (`results/protocol_comparison.csv`, graph F1):
 | Their protocol (each recording votes) at our settings | 0.00 | 0.00 | 0.00 |
 
 Even untuned, the method beats the published best on every subsystem.
+
+Root cause analysis against the published methods, run here on the same
+faults (`results/root_cause_comparison.csv`, MAP@3, Sub setting):
+
+| Method | Coolant | Hydraulics | Probe |
+|---|---|---|---|
+| TimeRank (no graph) | 0.85 | 0.47 | 0.47 |
+| Baro (no graph) | 0.88 | 0.75 | 0.63 |
+| PageRank (expert graph) | 1.00 | 1.00 | 0.27 |
+| CausTR (expert graph) | 1.00 | 0.74 | 0.58 |
+| CausTR (our learned graph) | 1.00 | 0.74 | **0.78** |
+| **Ours** (learned graph, no labels) | **1.00** | **1.00** | 0.69 |
+
+The ported baselines reproduce the published values exactly, except PageRank
+on hydraulics (1.00 vs 0.98, networkx vs scikit-network). Our learned graph is
+as useful as the expert graph for CausTR, and better on probe.
+
+Ablation (`results/ablation.csv`) - one decision switched off at a time:
+
+| Switched off | Coolant | Hydraulics | Probe |
+|---|---|---|---|
+| | graph F1 / MAP@3 / intervention F1 / prevented | | |
+| nothing (full method) | 0.74 / 1.00 / 1.00 / 0.94 | 0.62 / 1.00 / 1.00 / 0.89 | 0.32 / 0.69 / 0.17 / 0.76 |
+| alarm rule | 0.71 / 0.88 / 0.92 / 0.72 | 0.39 / 1.00 / 0.86 / 0.18 | 0.11 / 0.46 / 0.00 / 0.43 |
+| FDR correction | no change | no change | no change |
+| discrete test (ParCorr instead) | 0.46 / 0.78 / 0.90 / 0.97 | 0.30 / 0.67 / 1.00 / 0.85 | 0.40 / 0.60 / 0.17 / 0.51 |
+| window from the 5 s alarm rule (untuned) | 0.56 / 0.80 / 0.71 / 0.27 | 0.53 / 0.69 / 0.61 / 0.65 | 0.42 / 0.56 / 0.17 / 0.33 |
+| suspect restriction | 0.74 / 0.45 / 1.00 / 0.00 | 0.62 / 0.58 / 1.00 / 0.45 | 0.32 / 0.43 / 0.17 / 0.33 |
+| second (balanced) model | 0.74 / 1.00 / 0.00 / 0.94 | 0.62 / 1.00 / 0.53 / 0.89 | 0.32 / 0.69 / 0.00 / 0.76 |
+
+Every decision except FDR correction earns part of the result. On probe a
+less accurate-looking graph (continuous test, untuned) scores higher graph F1
+but diagnoses worse - graph F1 alone is not the right target.
 
 Settings used: 2.5 s grid, max lag 3, significance 0.001, discrete G-test,
 FDR correction, alarms only as effects, 5 same-moment partners, 3 conditioned

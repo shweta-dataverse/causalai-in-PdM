@@ -1,0 +1,22 @@
+subsystem,change,graph_f1,root_cause_map@3,root_cause_top1,intervention_f1,prevented_by_our_fix
+coolant,full method,0.737,1.0,1.0,1.0,0.938
+coolant,no alarm rule,0.706,0.88,1.0,0.917,0.72
+coolant,no FDR correction,0.737,1.0,1.0,1.0,0.938
+coolant,continuous test,0.457,0.783,0.96,0.9,0.965
+coolant,untuned settings,0.556,0.8,1.0,0.709,0.274
+coolant,no suspect restriction,0.737,0.453,0.92,1.0,0.0
+coolant,single model,0.737,1.0,1.0,0.0,0.938
+hydraulics,full method,0.615,1.0,1.0,1.0,0.894
+hydraulics,no alarm rule,0.385,1.0,1.0,0.859,0.176
+hydraulics,no FDR correction,0.615,1.0,1.0,1.0,0.894
+hydraulics,continuous test,0.296,0.671,0.732,1.0,0.851
+hydraulics,untuned settings,0.529,0.687,0.634,0.61,0.651
+hydraulics,no suspect restriction,0.615,0.577,0.707,1.0,0.447
+hydraulics,single model,0.615,1.0,1.0,0.533,0.894
+probe,full method,0.316,0.691,0.676,0.167,0.755
+probe,no alarm rule,0.111,0.456,0.5,0.0,0.432
+probe,no FDR correction,0.316,0.691,0.676,0.167,0.755
+probe,continuous test,0.4,0.603,0.559,0.167,0.509
+probe,untuned settings,0.421,0.561,0.471,0.167,0.334
+probe,no suspect restriction,0.316,0.426,0.412,0.167,0.333
+probe,single model,0.316,0.691,0.676,0.0,0.755
