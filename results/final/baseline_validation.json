@@ -1,9 +1,137 @@
 {
-  "method": "TimeRank",
-  "metric": "MAP@3",
-  "tolerance": 0.005,
   "passed": true,
-  "results": [
+  "tolerance": 0.005,
+  "graph_f1": [
+    {
+      "dataset": "coolant",
+      "model": "pc_default",
+      "published_f1": 0.2927,
+      "reproduced_f1": 0.293,
+      "correct_f1": 0.293,
+      "agrees": true
+    },
+    {
+      "dataset": "coolant",
+      "model": "fci_default",
+      "published_f1": 0.2927,
+      "reproduced_f1": 0.293,
+      "correct_f1": 0.293,
+      "agrees": true
+    },
+    {
+      "dataset": "coolant",
+      "model": "fges_default",
+      "published_f1": 0.1304,
+      "reproduced_f1": 0.13,
+      "correct_f1": 0.13,
+      "agrees": true
+    },
+    {
+      "dataset": "coolant",
+      "model": "pcmci_default",
+      "published_f1": 0.2581,
+      "reproduced_f1": 0.258,
+      "correct_f1": 0.258,
+      "agrees": true
+    },
+    {
+      "dataset": "hydraulic",
+      "model": "pc_default",
+      "published_f1": 0.4,
+      "reproduced_f1": 0.4,
+      "correct_f1": 0.4,
+      "agrees": true
+    },
+    {
+      "dataset": "hydraulic",
+      "model": "fci_default",
+      "published_f1": 0.4,
+      "reproduced_f1": 0.4,
+      "correct_f1": 0.4,
+      "agrees": true
+    },
+    {
+      "dataset": "hydraulic",
+      "model": "fges_default",
+      "published_f1": 0.274,
+      "reproduced_f1": 0.274,
+      "correct_f1": 0.274,
+      "agrees": true
+    },
+    {
+      "dataset": "hydraulic",
+      "model": "pcmci_default",
+      "published_f1": 0.1579,
+      "reproduced_f1": 0.158,
+      "correct_f1": 0.158,
+      "agrees": true
+    },
+    {
+      "dataset": "probe",
+      "model": "pc_default",
+      "published_f1": 0.3704,
+      "reproduced_f1": 0.37,
+      "correct_f1": 0.37,
+      "agrees": true
+    },
+    {
+      "dataset": "probe",
+      "model": "fci_default",
+      "published_f1": 0.3704,
+      "reproduced_f1": 0.37,
+      "correct_f1": 0.37,
+      "agrees": true
+    },
+    {
+      "dataset": "probe",
+      "model": "fges_default",
+      "published_f1": 0.25,
+      "reproduced_f1": 0.25,
+      "correct_f1": 0.25,
+      "agrees": true
+    },
+    {
+      "dataset": "probe",
+      "model": "pcmci_default",
+      "published_f1": 0.2899,
+      "reproduced_f1": 0.29,
+      "correct_f1": 0.29,
+      "agrees": true
+    },
+    {
+      "dataset": "full",
+      "model": "pc_default",
+      "published_f1": 0.1538,
+      "reproduced_f1": 0.154,
+      "correct_f1": 0.125,
+      "agrees": true
+    },
+    {
+      "dataset": "full",
+      "model": "fci_default",
+      "published_f1": 0.1538,
+      "reproduced_f1": 0.154,
+      "correct_f1": 0.125,
+      "agrees": true
+    },
+    {
+      "dataset": "full",
+      "model": "fges_default",
+      "published_f1": 0.2009,
+      "reproduced_f1": 0.201,
+      "correct_f1": 0.185,
+      "agrees": true
+    },
+    {
+      "dataset": "full",
+      "model": "pcmci_default",
+      "published_f1": 0.1971,
+      "reproduced_f1": 0.197,
+      "correct_f1": 0.19,
+      "agrees": true
+    }
+  ],
+  "timerank_map@3": [
     {
       "subsystem": "coolant",
       "setting": "sub",

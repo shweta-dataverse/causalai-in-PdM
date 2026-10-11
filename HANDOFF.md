@@ -93,26 +93,36 @@ Settings live in `settings.py`. There are no command-line flags.
 
 ## 4. Results obtained
 
-Updated 2026-10-11 after the day-1 fixes (see `IMPLEMENTATION_PLAN.md`,
+Updated 2026-10-11 after day 2 (see `IMPLEMENTATION_PLAN.md`,
 Part A). Regenerate with `python scripts/run_all_subsystems.py`.
 
 | Step | Metric | Coolant | Hydraulics | Probe |
 |---|---|---|---|---|
-| Graph validation | F1 | **0.71** | 0.43 | 0.18 |
-| | precision / recall | 0.86 / 0.60 | 0.60 / 0.33 | 0.29 / 0.13 |
-| | SHD | 5 | 16 | 18 |
-| Root cause | MAP@3 | 0.45 | 0.60 | 0.46 |
-| | top-1 hit rate | **0.92** | 0.71 | 0.41 |
-| | recall@3 | 0.47 | 0.75 | 0.53 |
-| | MRR | 0.96 | 0.83 | 0.55 |
-| Intervention | F1 | **0.92** | 0.86 | 0.00 |
+| Graph validation | F1 | **0.74** | **0.64** | 0.30 |
+| | precision / recall | 0.78 / 0.70 | 0.90 / 0.50 | 0.60 / 0.20 |
+| | SHD | 5 | 10 | 14 |
+| Root cause | MAP@3 | 0.45 | 0.63 | 0.42 |
+| | top-1 hit rate | **0.92** | 0.68 | 0.38 |
+| | recall@3 | 0.47 | 0.77 | 0.47 |
+| | MRR | 0.96 | 0.82 | 0.51 |
+| Intervention | F1 | **1.00** | **1.00** | 0.17 |
 | | scenarios | 4 | 9 | 6 |
-| Counterfactual | prevented by fixing our suspects | 0.00 | 0.17 | 0.24 |
-| | upper bound, fixing true causes | 0.76 | 0.20 | 0.38 |
+| Counterfactual | prevented by fixing our suspects | 0.00 | 0.46 | 0.41 |
+| | upper bound, fixing true causes | 1.00 | 0.88 | 0.59 |
+
+Held out, one fault scenario at a time (`scripts/held_out_scenarios.py`):
+
+| | Coolant | Hydraulics | Probe |
+|---|---|---|---|
+| Graph F1, mean ± sd over folds | 0.69 ± 0.04 | 0.62 ± 0.03 | 0.30 ± 0.07 |
+| Root cause MAP@3 / top-1 | 0.32 / 0.72 | 0.59 / 0.71 | 0.48 / 0.44 |
+| Intervention F1 | 0.73 | 0.96 | 0.00 |
+| Prevented by our suspects / upper bound | 0.00 / 0.24 | 0.37 / 0.78 | 0.15 / 0.03 |
 
 Settings used: 2.5 s grid, max lag 3, significance 0.001, discrete G-test,
-FDR correction, 60 healthy recordings. Tuned on coolant only; hydraulics and
-probe use them unchanged.
+FDR correction, alarms only as effects, 60 healthy recordings. Tuned on
+coolant only; hydraulics and probe use them unchanged. Day-2 changes and
+findings are listed at the top of `IMPLEMENTATION_PLAN.md`.
 
 What changed on day 1, and why the numbers moved:
 

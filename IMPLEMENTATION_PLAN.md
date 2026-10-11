@@ -36,6 +36,36 @@ current numbers in `HANDOFF.md` section 4.
   F1 0.0). Report it as a held-out failure; diagnose on day 3 only if time.
 - **Hydraulics discovery now takes seconds**, not 36 minutes.
 
+**Day 2 (2026-10-11):** the guiding rule from here on is *the best method we
+can build, measured with the same ruler as the paper, and never chosen by
+looking at the answer.* Method choices are made on coolant; hydraulics, probe
+and full are held out.
+
+- **Graph scoring ruler validated too.** Our scorer reproduces every
+  published subsystem F1 from their own released graphs
+  (`references/causrca_published`). Two findings: their coolant evaluation
+  included two lubrication signals; and the full expert graph lists two links
+  twice, which their scorer counts as found whether predicted or not. Scored
+  correctly, their best full-graph F1 is **0.190 (PCMCI), not 0.20**.
+- **New: alarms only as effects** (domain knowledge, `ALARMS_ONLY_AS_EFFECTS`).
+  Graph F1 coolant 0.71 -> 0.74, hydraulics 0.43 -> 0.64, probe 0.18 -> 0.30;
+  intervention F1 coolant and hydraulics both 1.00. Cost: interlock links
+  (alarm -> pump off / error state) cannot be learned - 5 of 18 in
+  hydraulics, 19 of 104 on the full machine. Allowing delayed interlocks
+  recovered none and hurt probe, so it was dropped.
+- **Voting compared (T8).** Per-recording voting (their protocol) finds
+  nothing with strict settings - no alarm link can reach half the votes.
+  Replicate voting (each vote = one run of every scenario) has precision 1.00
+  but loses recall on held-out subsystems (hydraulics 0.36 vs pooled 0.64).
+  Pooled stays the main method; voting is an ablation row.
+- **Held out scenarios (B2) done.** Hydraulics generalises to unseen faults
+  (intervention F1 0.96). Coolant drops because each alarm fires in only one
+  or two scenarios - the model cannot learn an alarm it has never seen fire.
+  Data requirement for deployment: every alarm must appear in the history.
+- **Root cause analysis is now the bottleneck.** Coolant: the model prevents
+  100% of faults given the right causes, 0% with our suspects. T2 first on
+  day 3.
+
 ---
 
 ## What the thesis is, and what it claims
