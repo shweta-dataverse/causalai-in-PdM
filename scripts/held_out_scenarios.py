@@ -42,7 +42,7 @@ def main() -> int:
     summary, folds = [], []
     for subsystem in SUBSYSTEMS:
         scenarios = sorted({run.experiment for run in data.load_fault_runs(subsystem)})
-        pairs, checks, counterfactuals = [], [], []
+        pairs, checks, counterfactuals, estimates = [], [], [], []
         for scenario in scenarios:
             result = runner.run(
                 subsystem=subsystem,
@@ -66,6 +66,7 @@ def main() -> int:
             pairs += fold_pairs
             checks += result.intervention_checks
             counterfactuals += result.counterfactuals
+            estimates += list(result.prevention_estimates.values())
             fold_rca = evaluate.score_rankings(fold_pairs, k=settings.TOP_K_ROOT_CAUSES)
             folds.append({
                 "subsystem": subsystem, "held_out": scenario, "runs": len(fold_pairs),
@@ -92,6 +93,10 @@ def main() -> int:
             "counterfactual_success": round(
                 sum(1 for _, _, several, _ in counterfactuals if several.prevented_everything)
                 / examined, 3),
+            "prevention_probability_our_fix": round(
+                sum(e["our_fix"].probability_prevented for e in estimates) / len(estimates), 3),
+            "prevention_probability_true_causes": round(
+                sum(e["true_causes"].probability_prevented for e in estimates) / len(estimates), 3),
             "counterfactual_with_true_causes": round(
                 sum(1 for _, _, _, truth in counterfactuals if truth.prevented_everything)
                 / examined, 3),

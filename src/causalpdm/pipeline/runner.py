@@ -48,6 +48,7 @@ class PipelineResult:
     intervention_score: dict = field(default_factory=dict)
     counterfactuals: list = field(default_factory=list)
     counterfactual_score: dict = field(default_factory=dict)
+    prevention_estimates: dict = field(default_factory=dict)
     seconds_taken: float = 0.0
 
     def headline(self) -> dict:
@@ -64,10 +65,15 @@ class PipelineResult:
             "root_cause_top1": self.root_cause_score.get("found_in_top_1"),
             "intervention_f1": self.intervention_score.get("mean_f1"),
             "intervention_scenarios": self.intervention_score.get("scenarios_checked"),
-            "counterfactual_success": self.counterfactual_score.get("suspects_success_rate"),
-            "counterfactual_with_true_causes": self.counterfactual_score.get("known_causes_success_rate"),
+            "counterfactual_success": self.counterfactual_score.get("suspects_prevention_probability"),
+            "counterfactual_with_true_causes": self.counterfactual_score.get("true_causes_prevention_probability"),
             "seconds_taken": round(self.seconds_taken, 1),
         }
+
+
+def _mean_probability(estimates: dict, which: str) -> float:
+    values = [pair[which].probability_prevented for pair in estimates.values()]
+    return round(sum(values) / len(values), 3) if values else 0.0
 
 
 def _fingerprint(tables: list[pd.DataFrame]) -> str:
@@ -240,6 +246,7 @@ def run(subsystem: str = "coolant",
     # two questions: what does fixing the single most suspicious variable
     # achieve, and what does fixing all our top suspects together achieve.
     counterfactuals = []
+    prevention_estimates = {}
     for run_info, result in rca_results:
         table = fault_tables.get(run_info.name)
         if table is None or not result.ranked_variables:
@@ -269,6 +276,20 @@ def run(subsystem: str = "coolant",
 
         counterfactuals.append((run_info, fix_one, fix_several, fix_true_causes))
 
+        # The same two fixes as probabilities, over many equally plausible
+        # versions of this run's hidden randomness rather than one arbitrary
+        # choice. These are the headline numbers and the dashboard's risk curves.
+        prevention_estimates[run_info.name] = {
+            "our_fix": explain.prevention_probability(
+                causal_model, table.reset_index(drop=True),
+                {name: healthy.get(name, 1.0) for name in suspects},
+                alarm_names, from_step=start_at),
+            "true_causes": explain.prevention_probability(
+                causal_model, table.reset_index(drop=True),
+                {name: healthy.get(name, 1.0) for name in run_info.caused_by},
+                alarm_names, from_step=start_at),
+        }
+
     # The headline is what the pipeline achieves on its own: fixing the suspects
     # that root cause analysis named. Fixing the known true causes is reported
     # next to it as a check on the model itself - it uses the answer, which a
@@ -288,6 +309,8 @@ def run(subsystem: str = "coolant",
         "suspects_success_rate": rate(suspects),
         "known_causes_prevented_fault": oracle,
         "known_causes_success_rate": rate(oracle),
+        "suspects_prevention_probability": _mean_probability(prevention_estimates, "our_fix"),
+        "true_causes_prevention_probability": _mean_probability(prevention_estimates, "true_causes"),
     }
     if verbose:
         _say("8 counterfactuals", f"fixing our top {top_k} suspects prevented "
@@ -303,6 +326,7 @@ def run(subsystem: str = "coolant",
         root_cause_score=rca_score, intervention_checks=checks,
         intervention_score=intervention_score, counterfactuals=counterfactuals,
         counterfactual_score=counterfactual_score,
+        prevention_estimates=prevention_estimates,
         seconds_taken=time.time() - started)
 
 

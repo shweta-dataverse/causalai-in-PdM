@@ -10,6 +10,10 @@ who built the machine, so we can try a setting, score the graph it produces
 against the expert's, and keep whatever scores best. That is ordinary model
 selection, and it is only possible because this dataset has ground truth.
 
+A plant has no such graph, so `choose_significance_by_prediction` offers the
+alternative a plant can actually use: keep the setting whose causal model best
+predicts recordings it has not seen.
+
 Settings worth searching, in order of how much they matter:
 
   resampling grid  how many seconds one row covers. This turned out to be the
@@ -25,9 +29,10 @@ import signal
 import time
 from dataclasses import dataclass
 
+import numpy as np
 import pandas as pd
 
-from . import discovery, evaluate, preprocess
+from . import discovery, evaluate, preprocess, scm
 
 
 @dataclass
@@ -149,3 +154,67 @@ def explain_result(result: TuningResult) -> str:
         f"(F1 {best['f1']:.2f}) in {best['seconds_to_run']} seconds. "
         f"{len(finished)} of {len(result.table)} settings finished within their time budget."
     )
+
+
+def choose_significance_by_prediction(
+    tables: list[pd.DataFrame],
+    variables: list[str],
+    candidates: list[float],
+    max_lag: int,
+    folds: int = 5,
+    **discover_options,
+) -> pd.DataFrame:
+    """
+    Pick the significance level without the expert graph.
+
+    A plant has no expert graph to score against, so `search` above is not
+    available there. What a plant does have is its own recordings. For each
+    candidate level we learn the graph and the equations from most recordings
+    and ask how well they predict the recordings left out. A level that keeps
+    too few links misses real influences; one that keeps too many fits noise.
+    Both predict unseen recordings worse.
+
+    Returns, per level, the average log-likelihood per value predicted on the
+    held-out recordings, averaged over `folds` splits. Higher is better.
+    """
+    rows = []
+    for significance in candidates:
+        fold_scores = []
+        for fold in range(folds):
+            held_out = [t for i, t in enumerate(tables) if i % folds == fold]
+            training = [t for i, t in enumerate(tables) if i % folds != fold]
+            graph = discovery.discover(training, variables, max_lag=max_lag,
+                                       significance=significance, **discover_options)
+            model = scm.fit(training, variables, graph.edges, max_lag=max_lag)
+            fold_scores.append(_held_out_log_likelihood(model, training, held_out))
+        rows.append({"significance": significance,
+                     "held_out_log_likelihood": round(float(np.mean(fold_scores)), 5),
+                     "spread_over_folds": round(float(np.std(fold_scores)), 5)})
+    return pd.DataFrame(rows)
+
+
+def _held_out_log_likelihood(model, training: list[pd.DataFrame],
+                             held_out: list[pd.DataFrame]) -> float:
+    """Average log-probability the fitted equations give to what really happened."""
+    floor = 1e-6
+    total, count = 0.0, 0
+    for variable in model.variables:
+        mechanism = model.mechanisms.get(variable)
+        if mechanism is None:
+            # Never changed in training: the model says it always holds that value.
+            constant = training[0][variable].iloc[0]
+            for table in held_out:
+                values = table[variable].to_numpy()[model.max_lag:]
+                total += float(np.sum(np.where(values == constant, 0.0, np.log(floor))))
+                count += len(values)
+            continue
+        inputs, outputs = scm._training_rows(held_out, variable, mechanism.causes, model.max_lag)
+        if len(outputs) == 0:
+            continue
+        probabilities = mechanism.honest_model.predict_proba(inputs)
+        classes = list(mechanism.honest_model.classes_)
+        seen = np.array([classes.index(v) if v in classes else -1 for v in outputs])
+        chance = np.where(seen >= 0, probabilities[np.arange(len(outputs)), np.maximum(seen, 0)], floor)
+        total += float(np.sum(np.log(np.maximum(chance, floor))))
+        count += len(outputs)
+    return total / max(count, 1)

@@ -104,3 +104,27 @@ def test_holding_a_variable_fixed_actually_holds_it(small_model):
 def test_the_evaluation_order_covers_every_variable(small_model):
     model, _ = small_model
     assert set(model.evaluation_order) == set(model.variables)
+
+
+def test_every_sampled_draw_replays_reality(small_model):
+    """
+    Sampling the hidden randomness must keep the consistency property for every
+    single draw, not on average - otherwise the probabilities mix this run
+    with runs that never happened.
+    """
+    model, tables = small_model
+    recording = tables[-1].reset_index(drop=True)
+    hidden = scm.sample_hidden_randomness(model, recording, draws=50, seed=1)
+    replayed = scm.simulate_draws(model, recording, hidden)
+    original = recording[model.variables].to_numpy(dtype=float)
+    assert (replayed == original[None]).all()
+
+
+def test_sampled_and_single_replays_agree_on_a_fixed_variable(small_model):
+    model, tables = small_model
+    recording = tables[-1].reset_index(drop=True)
+    name = next(iter(model.mechanisms))
+    hidden = scm.sample_hidden_randomness(model, recording, draws=20)
+    replayed = scm.simulate_draws(model, recording, hidden, hold_fixed={name: 1.0}, from_step=3)
+    column = model.variables.index(name)
+    assert (replayed[:, max(3, model.max_lag):, column] == 1.0).all()

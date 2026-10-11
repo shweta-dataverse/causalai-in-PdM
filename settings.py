@@ -81,7 +81,11 @@ MAX_LAG = 3
 # finds 14 of which only 5 are real. The extra links are noise, and they
 # make everything downstream slower and less trustworthy.
 #
-# Set to None to let the algorithm pick for itself from a standard range.
+# There is no automatic choice for the discrete test (tigramite does not
+# implement model selection for it). Choosing the level by how well the model
+# predicts unseen recordings - the option a plant without an expert graph has -
+# picks looser levels (0.01-0.05) and lower graph accuracy: good prediction is
+# not the same as the right causes. See scripts/protocol_comparison.py.
 SIGNIFICANCE = 0.001
 
 # Correct for testing many links at once. With 15 variables and 9 lags there

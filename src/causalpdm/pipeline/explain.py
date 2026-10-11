@@ -226,3 +226,54 @@ def validate_intervention(model: StructuralCausalModel, healthy_recording: pd.Da
         "recall": round(recall, 3),
         "f1": round(f1, 3),
     }
+
+
+@dataclass
+class PreventionEstimate:
+    """
+    How likely a fix would have been to prevent this fault, over many equally
+    plausible versions of what was unusual about this run.
+    """
+
+    changed: dict[str, float]
+    from_step: int
+    probability_prevented: float        # no alarm fires at all after the fix
+    alarm_prevented: dict[str, float]   # per alarm that really fired
+    risk_actual: np.ndarray             # per step: was any alarm on (0 or 1)
+    risk_with_fix: np.ndarray           # per step: share of draws with an alarm on
+
+
+def prevention_probability(model: StructuralCausalModel, recording: pd.DataFrame,
+                           change: dict[str, float], alarm_names: list[str],
+                           from_step: int = 0, draws: int = 200,
+                           seed: int = 0) -> PreventionEstimate:
+    """
+    The counterfactual as a probability rather than a single yes or no.
+
+    Draws the run's hidden randomness many times (`scm.sample_hidden_randomness`),
+    replays each draw with the change applied, and counts how often every alarm
+    stays silent. With no change, every draw reproduces the recording, so any
+    difference comes from the change alone.
+    """
+    hidden = scm.sample_hidden_randomness(model, recording, draws, seed)
+    fixed = scm.simulate_draws(model, recording, hidden, hold_fixed=change, from_step=from_step)
+    column = {name: i for i, name in enumerate(model.variables)}
+    alarms = [name for name in alarm_names if name in column]
+    actual = recording[model.variables].to_numpy(dtype=float)
+
+    after = slice(from_step, None)
+    fired = [name for name in alarms if (actual[after, column[name]] > 0.5).any()]
+    alarm_on_with_fix = {name: (fixed[:, after, column[name]] > 0.5).any(axis=1) for name in alarms}
+    any_alarm_with_fix = np.zeros(fixed.shape[0], dtype=bool)
+    for name in alarms:
+        any_alarm_with_fix |= alarm_on_with_fix[name]
+
+    alarm_columns = [column[name] for name in alarms]
+    return PreventionEstimate(
+        changed=change,
+        from_step=from_step,
+        probability_prevented=float(np.mean(~any_alarm_with_fix)) if fired else 0.0,
+        alarm_prevented={name: float(np.mean(~alarm_on_with_fix[name])) for name in fired},
+        risk_actual=(actual[:, alarm_columns] > 0.5).any(axis=1).astype(float),
+        risk_with_fix=(fixed[:, :, alarm_columns] > 0.5).any(axis=2).mean(axis=0),
+    )

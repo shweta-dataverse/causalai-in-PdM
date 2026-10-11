@@ -75,6 +75,8 @@ def main() -> int:
           f"({what_if['suspects_success_rate']:.0%})")
     print(f"  fixing the true causes worked {what_if['known_causes_prevented_fault']} "
           f"({what_if['known_causes_success_rate']:.0%})")
+    print(f"  chance our fix prevents it    {what_if['suspects_prevention_probability']:.0%} "
+          f"(fixing the true causes: {what_if['true_causes_prevention_probability']:.0%})")
 
     print(f"\nFinished in {result.seconds_taken:.1f} seconds.")
     print("Results written to results/. To see them:  streamlit run dashboard/app.py")

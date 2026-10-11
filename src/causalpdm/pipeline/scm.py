@@ -291,3 +291,76 @@ def simulate(model: StructuralCausalModel, recording: pd.DataFrame,
                 result.at[step, name] = 1.0 if mechanism.will_switch_on(values) else 0.0
 
     return result
+
+
+def sample_hidden_randomness(model: StructuralCausalModel, recording: pd.DataFrame,
+                             draws: int = 200, seed: int = 0) -> np.ndarray:
+    """
+    The abduction step done properly: many possible versions of the hidden
+    randomness, each consistent with what really happened.
+
+    For a True/False variable, one observation only tells us which side of the
+    chance the hidden number U fell on - below it if the variable was on, above
+    if off. `recover_hidden_randomness` takes the middle of that range, which is
+    one arbitrary choice: counterfactuals for binary variables are not pinned
+    down by the data (Tian and Pearl 2000). Drawing U uniformly from the whole
+    range instead turns a counterfactual into a probability, and every draw
+    still replays the real recording exactly when nothing is changed.
+
+    Returns an array of shape (draws, steps, variables) in `model.variables` order.
+    """
+    generator = np.random.default_rng(seed)
+    steps = len(recording)
+    hidden = np.full((draws, steps, len(model.variables)), 0.5)
+    for column, name in enumerate(model.variables):
+        mechanism = model.mechanisms.get(name)
+        if mechanism is None or steps <= model.max_lag:
+            continue
+        inputs, _ = _training_rows([recording], name, mechanism.causes, model.max_lag)
+        chance = _chance_on(mechanism, inputs)
+        was_on = recording[name].to_numpy(dtype=float)[model.max_lag:] > 0.5
+        low = np.where(was_on, 0.0, chance)
+        high = np.where(was_on, chance, 1.0)
+        hidden[:, model.max_lag:, column] = generator.uniform(low, high, size=(draws, len(chance)))
+    return hidden
+
+
+def simulate_draws(model: StructuralCausalModel, recording: pd.DataFrame,
+                   hidden: np.ndarray, hold_fixed: dict[str, float] | None = None,
+                   from_step: int = 0) -> np.ndarray:
+    """
+    `simulate` with recovered randomness, for many draws at once.
+
+    Same rules as `simulate`: `hold_fixed` pins those variables from
+    `from_step` on, everything downstream reacts. Returns an array of shape
+    (draws, steps, variables) in `model.variables` order.
+    """
+    hold_fixed = hold_fixed or {}
+    draws = hidden.shape[0]
+    column = {name: i for i, name in enumerate(model.variables)}
+    start = max(from_step, model.max_lag)
+    values = np.repeat(recording[model.variables].to_numpy(dtype=float)[None], draws, axis=0)
+
+    for step in range(model.max_lag, values.shape[1]):
+        for name in model.evaluation_order:
+            j = column[name]
+            if name in hold_fixed and step >= start:
+                values[:, step, j] = float(hold_fixed[name])
+                continue
+            mechanism = model.mechanisms.get(name)
+            if mechanism is None:
+                continue
+            inputs = np.column_stack([values[:, step - lag, column[cause]]
+                                      for cause, lag in mechanism.causes])
+            chance = _chance_on(mechanism, inputs)
+            values[:, step, j] = (hidden[:, step, j] < chance).astype(float)
+    return values
+
+
+def _chance_on(mechanism: Mechanism, inputs: np.ndarray) -> np.ndarray:
+    """The honest probability of being on, for many rows of cause values at once."""
+    if len(mechanism.causes) == 0:
+        return np.full(len(inputs), mechanism.base_rate)
+    raw = mechanism.honest_model.predict_proba(inputs)
+    chance = raw[:, 1] if raw.shape[1] > 1 else np.full(len(inputs), float(mechanism.honest_model.classes_[0]))
+    return np.clip(chance, PROBABILITY_FLOOR, 1 - PROBABILITY_FLOOR)
