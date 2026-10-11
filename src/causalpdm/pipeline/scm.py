@@ -168,7 +168,8 @@ def _training_rows(tables: list[pd.DataFrame], variable: str,
 
 
 def fit(tables: list[pd.DataFrame], variables: list[str], edges: pd.DataFrame,
-        max_lag: int, include_own_past: bool = True) -> StructuralCausalModel:
+        max_lag: int, include_own_past: bool = True,
+        balanced_decisions: bool = True) -> StructuralCausalModel:
     """
     Estimate one equation per variable from the recordings.
 
@@ -195,7 +196,10 @@ def fit(tables: list[pd.DataFrame], variables: list[str], edges: pd.DataFrame,
         honest = LogisticRegression(max_iter=1000, C=1.0)
         honest.fit(inputs, outputs)
 
-        decision = LogisticRegression(max_iter=1000, C=1.0, class_weight="balanced")
+        # `balanced_decisions=False` uses the honest model for simulation too.
+        # It exists only to measure what the second model is worth.
+        decision = LogisticRegression(max_iter=1000, C=1.0,
+                                      class_weight="balanced" if balanced_decisions else None)
         decision.fit(inputs, outputs)
 
         mechanisms[variable] = Mechanism(

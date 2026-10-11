@@ -101,6 +101,7 @@ def run(subsystem: str = "coolant",
         same_moment_partners: int | None = 5,
         max_parents_conditioned: int = 3,
         suspects: str = "parents",
+        balanced_decisions: bool = True,
         hold_out_scenario: str | None = None,
         use_cache: bool = True,
         verbose: bool = True) -> PipelineResult:
@@ -124,6 +125,7 @@ def run(subsystem: str = "coolant",
         "same_moment_partners": same_moment_partners,
         "max_parents_conditioned": max_parents_conditioned,
         "suspects": suspects,
+        "balanced_decisions": balanced_decisions,
         "hold_out_scenario": hold_out_scenario,
     }
 
@@ -160,7 +162,7 @@ def run(subsystem: str = "coolant",
     # change to preprocessing can never silently reuse a graph learned from
     # the old tables.
     cache_file = paths.CACHE_DIR / (
-        f"graph_{subsystem}_{seconds_per_step}_{max_lag}_{significance}_"
+        f"graph_{subsystem}_{seconds_per_step}_{max_lag}_{significance}_{independence_test}_"
         f"{multiple_test_correction}_{alarms_only_as_effects}_{same_moment_partners}_"
         f"{max_parents_conditioned}_{_fingerprint(tables)}.pkl")
     if use_cache and cache_file.exists():
@@ -190,7 +192,8 @@ def run(subsystem: str = "coolant",
              f"F1 {graph_score['f1']}", started)
 
     # --- fit equations ---------------------------------------------------
-    causal_model = scm.fit(tables, variables, graph.edges, max_lag=max_lag)
+    causal_model = scm.fit(tables, variables, graph.edges, max_lag=max_lag,
+                           balanced_decisions=balanced_decisions)
     if verbose:
         _say("5 fit equations", f"{len(causal_model.mechanisms)} equations, "
              f"average accuracy "

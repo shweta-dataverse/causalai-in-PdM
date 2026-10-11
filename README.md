@@ -97,6 +97,17 @@ Open the dashboard:
 streamlit run dashboard/app.py
 ```
 
+## Reproducing every number
+
+```bash
+python scripts/reproduce_all.py
+```
+
+Runs every evaluation script in order (about an hour) and copies the final
+tables into `results/final/`, which is kept in git. The one exception is the
+full 92-signal machine, which does not finish in reasonable time - the
+measured evidence is in `results/final/full_graph_scaling.log`.
+
 ## Settings
 
 Everything tunable lives in `settings.py`, with a comment on each value
@@ -141,9 +152,17 @@ src/causalpdm/pipeline/
     explain.py           what-if and what-would-have-prevented-it
     runner.py            runs it all end to end
 scripts/
-    explore_data.py      a first look at the data
-    run_pipeline.py      run everything
-    tune_settings.py     search for better settings
+    explore_data.py           a first look at the data
+    run_pipeline.py           run everything on one subsystem
+    run_all_subsystems.py     run everything on every subsystem
+    held_out_scenarios.py     faults of a type never seen in training
+    protocol_comparison.py    tuned vs untuned vs label-free settings
+    compare_root_cause.py     against the published root cause methods
+    minimal_fixes.py          smallest fix that would have prevented each fault
+    ablation.py               what each design decision is worth
+    validate_baseline.py      our scoring reproduces the published numbers
+    reproduce_all.py          all of the above, in order
+    tune_settings.py          search for better settings
 dashboard/app.py         the dashboard
 tests/                   the test suite
 results/                 output, regenerable
