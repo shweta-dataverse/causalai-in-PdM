@@ -136,31 +136,70 @@ def score_unexplained_behaviour(model: StructuralCausalModel, recording: pd.Data
     return ranking.sort_values("unexplained_score", ascending=False, ignore_index=True)
 
 
+def suspects_behind_alarms(model: StructuralCausalModel, alarms_that_fired: list[str],
+                           reach: str = "parents") -> set[str]:
+    """
+    The signals the learned graph says could have set off these alarms.
+
+    "parents"    the alarms' direct causes. This is what the best published
+                 method on causRCA does (CausTR), there with the expert graph.
+    "ancestors"  everything upstream of the alarms.
+    "all"        no restriction.
+
+    Uses only the learned graph and the alarms seen in the recording - no
+    labels - so it works the same way in a plant.
+    """
+    if reach == "all" or not alarms_that_fired:
+        return set(model.variables)
+    found: set[str] = set()
+    frontier = list(alarms_that_fired)
+    while frontier:
+        variable = frontier.pop()
+        for cause, _ in model.causes_of(variable):
+            if cause != variable and cause not in found:
+                found.add(cause)
+                if reach == "ancestors":
+                    frontier.append(cause)
+    return found - set(alarms_that_fired)
+
+
 def analyse(model: StructuralCausalModel, recording: pd.DataFrame,
             alarm_names: list[str], recording_name: str = "",
-            look_back_steps: int = 10, only_variables_that_moved: bool = True) -> RootCauseResult:
+            look_back_steps: int = 10, only_variables_that_moved: bool = True,
+            suspects: str = "parents") -> RootCauseResult:
     """
     Run root cause analysis on one fault recording.
 
     Variables that never moved during the fault window are pushed to the bottom
     of the ranking: whatever caused this fault, it was not something that sat
     perfectly still throughout.
+
+    `suspects` decides who is considered first (see `suspects_behind_alarms`).
+    Without it, places two and three went to pump states that switch off
+    *because* of the fault: they behave strangely, but their causes explain
+    them. Signals the graph links to the alarms that fired are ranked first,
+    everything else after them, so nothing is thrown away.
     """
     start, end, fired = find_fault_window(recording, alarm_names, look_back_steps)
     ranking = score_unexplained_behaviour(model, recording, (start, end))
+    ranking["prime_suspect"] = ranking["variable"].isin(
+        suspects_behind_alarms(model, fired, suspects))
 
     if only_variables_that_moved:
         ranking["unexplained_score"] = np.where(
             ranking["changed_in_window"], ranking["unexplained_score"],
             ranking["unexplained_score"] * 0.0)
-        ranking = ranking.sort_values(
-            ["changed_in_window", "unexplained_score"],
-            ascending=[False, False], ignore_index=True)
 
-    # Alarms report the fault, they never cause it, so they are not candidates.
+    # Alarms report the fault, they never cause it, so they go last. Then prime
+    # suspects before everyone else, then signals that moved before ones that
+    # sat still, then by how unexplained their behaviour was.
     ranking["is_alarm"] = ranking["variable"].isin(alarm_names)
-    ranking = ranking.sort_values(["is_alarm", "unexplained_score"],
-                                  ascending=[True, False], ignore_index=True)
+    order = ["is_alarm", "prime_suspect", "unexplained_score"]
+    ascending = [True, False, False]
+    if only_variables_that_moved:
+        order.insert(2, "changed_in_window")
+        ascending.insert(2, False)
+    ranking = ranking.sort_values(order, ascending=ascending, ignore_index=True)
 
     return RootCauseResult(ranking=ranking, fault_window=(start, end),
                            alarms_that_fired=fired, recording_name=recording_name)

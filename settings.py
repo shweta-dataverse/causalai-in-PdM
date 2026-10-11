@@ -166,6 +166,12 @@ SCM_METHOD = "logistic"
 # How many candidate root causes to report per fault.
 TOP_K_ROOT_CAUSES = 3
 
+# Who is suspected first: the signals the learned graph links to the alarms
+# that fired. "parents" = the alarms' direct causes (what the best published
+# method does, there with the expert graph), "ancestors" = everything upstream,
+# "all" = no restriction. Everything else is still ranked, just after them.
+ROOT_CAUSE_SUSPECTS = "parents"
+
 
 # =============================================================================
 # 7. OUTPUT

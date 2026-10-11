@@ -181,7 +181,7 @@ if page == "Overview":
              help="Alarms we predicted, against alarms that really fired.")
     d.metric("Faults prevented by our fix", f"{what_if['suspects_success_rate']:.0%}",
              help="Fixing the suspects our root cause analysis named made every "
-                  "alarm disappear. Upper bound, fixing the known true causes: "
+                  "alarm disappear. Fixing the known true causes instead: "
                   f"{what_if['known_causes_success_rate']:.0%}.")
 
     st.divider()
@@ -505,10 +505,12 @@ elif page == "8 - What would have prevented it":
     a.metric("Faults examined", what_if["faults_examined"])
     b.metric("Fixing our suspects prevented the fault",
              f"{what_if['suspects_success_rate']:.0%}")
-    c.metric("Upper bound: fixing the true causes",
+    c.metric("Fixing the true causes instead",
              f"{what_if['known_causes_success_rate']:.0%}",
-             help="Uses the known answer, which a real plant never has. Shows "
-                  "what the model can do when root cause analysis is perfect.")
+             help="Uses the known answer, which a real plant never has. A check "
+                  "on the model itself. Not an upper bound: holding a downstream "
+                  "signal healthy can also silence an alarm, so read prevention "
+                  "together with whether the right cause was named.")
 
     st.subheader("Try a fix yourself")
     chosen, run_info, rca_result = pick_fault("Start from which fault?")
@@ -674,14 +676,15 @@ elif page == "How accurate is it":
     a.metric("Faults examined", what_if["faults_examined"])
     b.metric("Fixing our suspects prevented the fault",
              f"{what_if['suspects_success_rate']:.0%}")
-    c.metric("Upper bound: fixing the true causes",
+    c.metric("Fixing the true causes instead",
              f"{what_if['known_causes_success_rate']:.0%}")
     st.caption(
         "The middle number is what the pipeline achieves on its own. The last "
-        "one uses the known answer, so it is an upper bound and a test of the "
-        "reasoning itself: if fixing exactly the tampered signals does not make "
-        "the fault disappear, a link is missing from the map - so the fix is to "
-        "improve the map, not the reasoning.")
+        "one uses the known answer, so it tests the reasoning itself: if fixing "
+        "exactly the tampered signals does not make the fault disappear, a link "
+        "is missing from the map. It is not an upper bound - holding a "
+        "downstream signal healthy can also silence an alarm - so prevention "
+        "is always read together with whether the right cause was named.")
 
     st.divider()
     for title, body, kind in explain.HONESTY_NOTES:

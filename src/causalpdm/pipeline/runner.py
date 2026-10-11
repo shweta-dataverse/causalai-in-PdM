@@ -65,7 +65,7 @@ class PipelineResult:
             "intervention_f1": self.intervention_score.get("mean_f1"),
             "intervention_scenarios": self.intervention_score.get("scenarios_checked"),
             "counterfactual_success": self.counterfactual_score.get("suspects_success_rate"),
-            "counterfactual_upper_bound": self.counterfactual_score.get("known_causes_success_rate"),
+            "counterfactual_with_true_causes": self.counterfactual_score.get("known_causes_success_rate"),
             "seconds_taken": round(self.seconds_taken, 1),
         }
 
@@ -94,6 +94,7 @@ def run(subsystem: str = "coolant",
         alarms_only_as_effects: bool = True,
         same_moment_partners: int | None = 5,
         max_parents_conditioned: int = 3,
+        suspects: str = "parents",
         hold_out_scenario: str | None = None,
         use_cache: bool = True,
         verbose: bool = True) -> PipelineResult:
@@ -116,6 +117,7 @@ def run(subsystem: str = "coolant",
         "alarms_only_as_effects": alarms_only_as_effects,
         "same_moment_partners": same_moment_partners,
         "max_parents_conditioned": max_parents_conditioned,
+        "suspects": suspects,
         "hold_out_scenario": hold_out_scenario,
     }
 
@@ -194,7 +196,8 @@ def run(subsystem: str = "coolant",
         table = fault_tables.get(run_info.name)
         if table is None:
             continue
-        result = rca.analyse(causal_model, table, alarm_names, run_info.name)
+        result = rca.analyse(causal_model, table, alarm_names, run_info.name,
+                             suspects=suspects)
         rca_results.append((run_info, result))
         scored_pairs.append((result.ranked_variables, run_info.caused_by))
     rca_score = evaluate.score_rankings(scored_pairs, k=top_k)
@@ -268,7 +271,11 @@ def run(subsystem: str = "coolant",
 
     # The headline is what the pipeline achieves on its own: fixing the suspects
     # that root cause analysis named. Fixing the known true causes is reported
-    # only as an upper bound - it uses the answer, which a real plant never has.
+    # next to it as a check on the model itself - it uses the answer, which a
+    # real plant never has. It is NOT an upper bound: holding a downstream
+    # signal healthy can also silence an alarm in the model, so fixing suspects
+    # can "prevent" more faults than fixing the true causes (probe: 0.91 vs
+    # 0.59). Prevention must always be read together with root cause accuracy.
     examined = len(counterfactuals)
     rate = lambda count: round(count / examined, 3) if examined else 0
     helped = sum(1 for _, one, _, _ in counterfactuals if one.prevented_something)
@@ -284,8 +291,8 @@ def run(subsystem: str = "coolant",
     }
     if verbose:
         _say("8 counterfactuals", f"fixing our top {top_k} suspects prevented "
-             f"{suspects} of {examined} faults entirely; upper bound with the "
-             f"known true causes {oracle} of {examined}", started)
+             f"{suspects} of {examined} faults entirely; fixing the known true "
+             f"causes {oracle} of {examined}", started)
 
     return PipelineResult(
         subsystem=subsystem, dataset_summary=dataset.summary(),

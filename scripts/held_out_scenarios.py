@@ -57,6 +57,7 @@ def main() -> int:
                 alarms_only_as_effects=settings.ALARMS_ONLY_AS_EFFECTS,
                 same_moment_partners=settings.SAME_MOMENT_PARTNERS,
                 max_parents_conditioned=settings.MAX_PARENTS_CONDITIONED,
+                suspects=settings.ROOT_CAUSE_SUSPECTS,
                 hold_out_scenario=scenario,
                 use_cache=settings.USE_CACHE,
                 verbose=False,
@@ -91,7 +92,7 @@ def main() -> int:
             "counterfactual_success": round(
                 sum(1 for _, _, several, _ in counterfactuals if several.prevented_everything)
                 / examined, 3),
-            "counterfactual_upper_bound": round(
+            "counterfactual_with_true_causes": round(
                 sum(1 for _, _, _, truth in counterfactuals if truth.prevented_everything)
                 / examined, 3),
         })

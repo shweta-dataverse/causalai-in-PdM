@@ -40,6 +40,7 @@ def main() -> int:
         alarms_only_as_effects=settings.ALARMS_ONLY_AS_EFFECTS,
         same_moment_partners=settings.SAME_MOMENT_PARTNERS,
         max_parents_conditioned=settings.MAX_PARENTS_CONDITIONED,
+        suspects=settings.ROOT_CAUSE_SUSPECTS,
         use_cache=settings.USE_CACHE,
     )
     runner.save(result)
@@ -72,7 +73,7 @@ def main() -> int:
     print(f"  fixing top suspect helped     {what_if['top_suspect_silenced_an_alarm']}")
     print(f"  fixing our suspects prevented {what_if['suspects_prevented_fault']} "
           f"({what_if['suspects_success_rate']:.0%})")
-    print(f"  upper bound, true causes      {what_if['known_causes_prevented_fault']} "
+    print(f"  fixing the true causes worked {what_if['known_causes_prevented_fault']} "
           f"({what_if['known_causes_success_rate']:.0%})")
 
     print(f"\nFinished in {result.seconds_taken:.1f} seconds.")
