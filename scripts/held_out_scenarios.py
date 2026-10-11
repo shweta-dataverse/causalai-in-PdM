@@ -56,6 +56,7 @@ def main() -> int:
                 top_k=settings.TOP_K_ROOT_CAUSES,
                 alarms_only_as_effects=settings.ALARMS_ONLY_AS_EFFECTS,
                 same_moment_partners=settings.SAME_MOMENT_PARTNERS,
+                max_parents_conditioned=settings.MAX_PARENTS_CONDITIONED,
                 hold_out_scenario=scenario,
                 use_cache=settings.USE_CACHE,
                 verbose=False,

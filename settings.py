@@ -107,6 +107,15 @@ MAX_COMBINATIONS = 2
 # and would be added as known links.
 ALARMS_ONLY_AS_EFFECTS = True
 
+# How many already-known causes of EACH end of a link the final test conditions
+# on. Every extra conditioned signal doubles the counting table the test has to
+# fill, so this is the main speed lever (Runge et al. 2019 discuss limiting it).
+# At 6 the full machine's final phase took over 0.2 s per test and would have
+# run for hours; at 3 it is about 17 ms.
+# Measured: coolant unchanged (F1 0.74); hydraulics 0.64 -> 0.62 (precision
+# 0.90 -> 1.00); probe 0.30 -> 0.32.
+MAX_PARENTS_CONDITIONED = 3
+
 # Screening before the search: each signal may be linked within the same time
 # step only to its 5 strongest same-moment partners (lagged links unscreened).
 #

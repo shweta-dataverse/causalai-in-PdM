@@ -93,6 +93,7 @@ def run(subsystem: str = "coolant",
         top_k: int = 3,
         alarms_only_as_effects: bool = True,
         same_moment_partners: int | None = 5,
+        max_parents_conditioned: int = 3,
         hold_out_scenario: str | None = None,
         use_cache: bool = True,
         verbose: bool = True) -> PipelineResult:
@@ -114,6 +115,7 @@ def run(subsystem: str = "coolant",
         "multiple_test_correction": multiple_test_correction, "min_rows": min_rows,
         "alarms_only_as_effects": alarms_only_as_effects,
         "same_moment_partners": same_moment_partners,
+        "max_parents_conditioned": max_parents_conditioned,
         "hold_out_scenario": hold_out_scenario,
     }
 
@@ -152,7 +154,7 @@ def run(subsystem: str = "coolant",
     cache_file = paths.CACHE_DIR / (
         f"graph_{subsystem}_{seconds_per_step}_{max_lag}_{significance}_"
         f"{multiple_test_correction}_{alarms_only_as_effects}_{same_moment_partners}_"
-        f"{_fingerprint(tables)}.pkl")
+        f"{max_parents_conditioned}_{_fingerprint(tables)}.pkl")
     if use_cache and cache_file.exists():
         graph = pickle.loads(cache_file.read_bytes())
         if verbose:
@@ -163,7 +165,8 @@ def run(subsystem: str = "coolant",
             independence_test=independence_test,
             multiple_test_correction=multiple_test_correction,
             alarms=alarm_names if alarms_only_as_effects else None,
-            same_moment_partners=same_moment_partners)
+            same_moment_partners=same_moment_partners,
+            max_parents_conditioned=max_parents_conditioned)
         cache_file.write_bytes(pickle.dumps(graph))
         if verbose:
             _say("3 discover", f"{len(graph.edges)} causal links found", started)
