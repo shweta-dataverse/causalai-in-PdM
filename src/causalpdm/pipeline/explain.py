@@ -30,6 +30,7 @@ and it is what `validate_intervention` below does.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from itertools import combinations
 
 import numpy as np
 import pandas as pd
@@ -277,3 +278,38 @@ def prevention_probability(model: StructuralCausalModel, recording: pd.DataFrame
         risk_actual=(actual[:, alarm_columns] > 0.5).any(axis=1).astype(float),
         risk_with_fix=(fixed[:, :, alarm_columns] > 0.5).any(axis=2).mean(axis=0),
     )
+
+
+def minimal_fix(model: StructuralCausalModel, recording: pd.DataFrame,
+                candidates: list[str], healthy: dict[str, float],
+                alarm_names: list[str], from_step: int = 0, max_size: int = 3,
+                target: float = 0.9, draws: int = 100) -> dict:
+    """
+    The smallest set of signals that, had they stayed healthy, would have
+    prevented this fault.
+
+    This is a counterfactual explanation in the sense of algorithmic recourse
+    (Karimi, Schoelkopf and Valera 2021): not "which inputs would flip a
+    prediction", but which interventions on the real system would have changed
+    the outcome, propagated through the causal model. Sets are tried smallest
+    first, so the first one that reaches `target` probability is minimal.
+    Alarms are never offered as levers - silencing an alarm fixes nothing.
+
+    If no set up to `max_size` reaches the target, the best one found is
+    returned with `reached_target` False. That is an answer too: no small
+    operational fix suffices, so inspect or replace components.
+    """
+    levers = [name for name in candidates if name not in set(alarm_names)]
+    best = {"fix": [], "probability": 0.0}
+    tried = 0
+    for size in range(1, max_size + 1):
+        for chosen in combinations(levers, size):
+            tried += 1
+            estimate = prevention_probability(
+                model, recording, {name: healthy.get(name, 1.0) for name in chosen},
+                alarm_names, from_step=from_step, draws=draws)
+            if estimate.probability_prevented > best["probability"]:
+                best = {"fix": list(chosen), "probability": estimate.probability_prevented}
+            if estimate.probability_prevented >= target:
+                return {**best, "size": size, "reached_target": True, "sets_tried": tried}
+    return {**best, "size": len(best["fix"]), "reached_target": False, "sets_tried": tried}
