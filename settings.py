@@ -107,6 +107,16 @@ MAX_COMBINATIONS = 2
 # and would be added as known links.
 ALARMS_ONLY_AS_EFFECTS = True
 
+# Screening before the search: each signal may be linked within the same time
+# step only to its 5 strongest same-moment partners (lagged links unscreened).
+#
+# Why: on the full machine a cycle starting or stopping switches dozens of
+# signals in the same step, so each signal moves with about 71 others and
+# PCMCI+ would need ~2.3 million tests (13-45 hours). With the screen it runs
+# in minutes. Measured: no change at all on coolant, hydraulics or probe.
+# Set to None to switch screening off.
+SAME_MOMENT_PARTNERS = 5
+
 # Every causRCA coolant variable is True/False, so the independence test must
 # handle discrete data. A test built for continuous values would be wrong here.
 # Options: "discrete" (CMIsymb) or "continuous" (ParCorr).

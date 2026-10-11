@@ -95,6 +95,7 @@ def discover(
     max_combinations: int = 2,
     max_parents_conditioned: int | None = 6,
     alarms: list[str] | None = None,
+    same_moment_partners: int | None = None,
 ) -> CausalGraph:
     """
     Learn a causal graph from a set of recordings.
@@ -103,6 +104,9 @@ def discover(
     controller reporting a condition, so it can be an effect but never a cause.
     Links out of an alarm are never tested, which removes a large share of the
     search and every chance of a false "alarm causes pump" link.
+
+    Passing `same_moment_partners` screens the search before it starts; see
+    `screen_same_moment_links`. It is what makes the full machine computable.
 
     Setting `significance` to None lets PCMCI+ choose it from a standard range
     using its own model-selection score, instead of us guessing.
@@ -126,6 +130,11 @@ def discover(
         cond_ind_test=make_independence_test(independence_test),
         verbosity=0,
     )
+    same_moment_pairs = None
+    if same_moment_partners is not None:
+        same_moment_pairs = screen_same_moment_links(
+            pcmci.cond_ind_test, variables, same_moment_partners, significance or 0.05)
+    restricted = alarms or same_moment_pairs is not None
     result = pcmci.run_pcmciplus(
         tau_min=0,
         tau_max=max_lag,
@@ -135,7 +144,8 @@ def discover(
         max_conds_py=max_parents_conditioned,
         max_conds_px=max_parents_conditioned,
         fdr_method=multiple_test_correction,
-        link_assumptions=alarms_only_as_effects(variables, alarms, max_lag) if alarms else None,
+        link_assumptions=(allowed_links(variables, max_lag, alarms or [], same_moment_pairs)
+                          if restricted else None),
     )
 
     return CausalGraph(
@@ -149,6 +159,8 @@ def discover(
             "max_conditions": max_conditions,
             "max_combinations": max_combinations,
             "alarms_only_as_effects": bool(alarms),
+            "same_moment_partners": same_moment_partners,
+            "same_moment_pairs_kept": len(same_moment_pairs) if same_moment_pairs is not None else None,
             "recordings_used": len(tables),
         },
         link_type_counts=_count_link_types(result),
@@ -262,23 +274,65 @@ def _discover_group(job) -> pd.DataFrame | None:
         return None
 
 
-def alarms_only_as_effects(variables: list[str], alarms: list[str], max_lag: int) -> dict:
+def screen_same_moment_links(test, variables: list[str], partners: int,
+                             significance: float) -> set[frozenset]:
     """
-    Tell PCMCI+ which links it may test: everything, except out of an alarm.
+    Decide which pairs of signals may be linked within the same time step.
+
+    Why this exists: on the full machine, a machining cycle starting or
+    stopping switches dozens of signals in the same 2.5 s step, so pooled over
+    22,000 rows almost every pair looks related - a signal moves together with
+    about 71 others. PCMCI+ then tries to explain each of those ~2,900 pairs
+    away with every combination of up to three neighbours (tigramite lifts our
+    combination limit in that phase, for correctness). That is ~2.3 million
+    tests, or 13-45 hours. Coolant has 8 neighbours per signal and ~800.
+
+    The screen keeps, for each signal, only its `partners` strongest
+    same-moment partners, judged by the plain dependence test with nothing
+    conditioned on. A pair survives if either signal ranks the other among its
+    strongest. Lagged links are not screened. This is ordinary screening for
+    high-dimensional problems (sure independence screening, Fan and Lv 2008);
+    the cost is that a true same-moment link outside both signals' strongest
+    partners cannot be found. `partners` is fixed in advance, not tuned.
+    """
+    related: dict[int, list[tuple[float, int]]] = defaultdict(list)
+    for i in range(len(variables)):
+        for j in range(i + 1, len(variables)):
+            value, p_value = test.run_test(X=[(i, 0)], Y=[(j, 0)], Z=[])[:2]
+            if p_value <= significance:
+                related[i].append((abs(float(value)), j))
+                related[j].append((abs(float(value)), i))
+
+    kept: set[frozenset] = set()
+    for i, found in related.items():
+        for _, j in sorted(found, reverse=True)[:partners]:
+            kept.add(frozenset((variables[i], variables[j])))
+    return kept
+
+
+def allowed_links(variables: list[str], max_lag: int, alarms: list[str],
+                  same_moment_pairs: set[frozenset] | None = None) -> dict:
+    """
+    Tell PCMCI+ which links it may test.
+
+    Two rules can apply. Alarms are effects only: no link may leave an alarm,
+    though an alarm may depend on its own past. And when `same_moment_pairs` is
+    given, a link within the same time step is allowed only between a screened
+    pair (see `screen_same_moment_links`).
 
     Tigramite wants every allowed link listed. "-?>" means "may exist, and if
     it does it points this way"; "o?o" leaves both existence and direction to
     the data. A same-moment link is declared from both ends, so a signal that
     may switch an alarm on at once appears as "-?>" at the alarm and "<?-" at
-    the signal. An alarm may still depend on its own past.
+    the signal.
 
-    The cost: interlocks - an alarm that switches a pump off or puts the
-    machine into an error state - cannot be learned. That is 5 of 18 expert
-    links in hydraulics and 19 of 104 on the full machine. Allowing alarms to
-    act one step later recovered none of them (at a 2.5 s grid interlocks act
-    within the same step) and added false links on probe. In a plant, interlock
-    actions are written down in the controller's alarm configuration, so they
-    would be added as known links rather than learned.
+    The cost of the alarm rule: interlocks - an alarm that switches a pump off
+    or puts the machine into an error state - cannot be learned. That is 5 of
+    18 expert links in hydraulics and 19 of 104 on the full machine. Allowing
+    alarms to act one step later recovered none of them (at a 2.5 s grid
+    interlocks act within the same step) and added false links on probe. In a
+    plant, interlock actions are written down in the controller's alarm
+    configuration, so they would be added as known links rather than learned.
     """
     alarm_set = set(alarms)
     assumptions = {}
@@ -291,9 +345,12 @@ def alarms_only_as_effects(variables: list[str], alarms: list[str], max_lag: int
                 if lag > 0:
                     if cause not in alarm_set or i == j:
                         links[(i, -lag)] = "-?>"
-                elif cause in alarm_set and effect in alarm_set:
                     continue
-                elif effect in alarm_set:
+                if same_moment_pairs is not None and frozenset((cause, effect)) not in same_moment_pairs:
+                    continue
+                if cause in alarm_set and effect in alarm_set:
+                    continue
+                if effect in alarm_set:
                     links[(i, 0)] = "-?>"
                 elif cause in alarm_set:
                     links[(i, 0)] = "<?-"
