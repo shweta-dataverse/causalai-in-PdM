@@ -96,6 +96,7 @@ def discover(
     max_parents_conditioned: int | None = 6,
     alarms: list[str] | None = None,
     same_moment_partners: int | None = None,
+    earlier_causes: int | None = None,
 ) -> CausalGraph:
     """
     Learn a causal graph from a set of recordings.
@@ -106,7 +107,8 @@ def discover(
     search and every chance of a false "alarm causes pump" link.
 
     Passing `same_moment_partners` screens the search before it starts; see
-    `screen_same_moment_links`. It is what makes the full machine computable.
+    `screen_same_moment_links`. Passing `earlier_causes` does the same for
+    links across time steps; see `screen_earlier_causes`.
 
     Setting `significance` to None lets PCMCI+ choose it from a standard range
     using its own model-selection score, instead of us guessing.
@@ -134,7 +136,12 @@ def discover(
     if same_moment_partners is not None:
         same_moment_pairs = screen_same_moment_links(
             pcmci.cond_ind_test, variables, same_moment_partners, significance or 0.05)
-    restricted = alarms or same_moment_pairs is not None
+    lagged_links = None
+    if earlier_causes is not None:
+        lagged_links = screen_earlier_causes(
+            pcmci.cond_ind_test, variables, alarms or [], max_lag, earlier_causes,
+            significance or 0.05)
+    restricted = alarms or same_moment_pairs is not None or lagged_links is not None
     result = pcmci.run_pcmciplus(
         tau_min=0,
         tau_max=max_lag,
@@ -144,7 +151,8 @@ def discover(
         max_conds_py=max_parents_conditioned,
         max_conds_px=max_parents_conditioned,
         fdr_method=multiple_test_correction,
-        link_assumptions=(allowed_links(variables, max_lag, alarms or [], same_moment_pairs)
+        link_assumptions=(allowed_links(variables, max_lag, alarms or [], same_moment_pairs,
+                                        lagged_links)
                           if restricted else None),
     )
 
@@ -161,6 +169,7 @@ def discover(
             "alarms_only_as_effects": bool(alarms),
             "same_moment_partners": same_moment_partners,
             "same_moment_pairs_kept": len(same_moment_pairs) if same_moment_pairs is not None else None,
+            "earlier_causes": earlier_causes,
             "recordings_used": len(tables),
         },
         link_type_counts=_count_link_types(result),
@@ -310,8 +319,45 @@ def screen_same_moment_links(test, variables: list[str], partners: int,
     return kept
 
 
+def screen_earlier_causes(test, variables: list[str], alarms: list[str], max_lag: int,
+                          keep: int, significance: float) -> set[tuple[str, str, int]]:
+    """
+    Decide which earlier signals may be tested as causes of each signal.
+
+    The same principle as `screen_same_moment_links`, applied across time
+    steps - the original form of the Sparse Candidate algorithm (Friedman,
+    Nachman and Pe'er 1999). On the full machine each signal otherwise keeps
+    dozens of candidate causes through the first phase, so every final test
+    conditions on many signals at once and slows to seconds per test (measured:
+    the run did not finish in five hours). Here each signal keeps only its
+    `keep` strongest earlier candidates, judged by the plain dependence test.
+    Its own past is always kept. Alarms are never candidates (they are effects
+    only). `keep` is fixed in advance, not tuned.
+
+    Returns (cause, effect, lag) triples.
+    """
+    alarm_set = set(alarms)
+    kept: set[tuple[str, str, int]] = set()
+    for j, effect in enumerate(variables):
+        found = []
+        for i, cause in enumerate(variables):
+            for lag in range(1, max_lag + 1):
+                if i == j:
+                    kept.add((cause, effect, lag))
+                    continue
+                if cause in alarm_set:
+                    continue
+                value, p_value = test.run_test(X=[(i, -lag)], Y=[(j, 0)], Z=[])[:2]
+                if p_value <= significance:
+                    found.append((abs(float(value)), cause, lag))
+        for _, cause, lag in sorted(found, reverse=True)[:keep]:
+            kept.add((cause, effect, lag))
+    return kept
+
+
 def allowed_links(variables: list[str], max_lag: int, alarms: list[str],
-                  same_moment_pairs: set[frozenset] | None = None) -> dict:
+                  same_moment_pairs: set[frozenset] | None = None,
+                  lagged_links: set[tuple[str, str, int]] | None = None) -> dict:
     """
     Tell PCMCI+ which links it may test.
 
@@ -343,6 +389,8 @@ def allowed_links(variables: list[str], max_lag: int, alarms: list[str],
                 if i == j and lag == 0:
                     continue
                 if lag > 0:
+                    if lagged_links is not None and (cause, effect, lag) not in lagged_links:
+                        continue
                     if cause not in alarm_set or i == j:
                         links[(i, -lag)] = "-?>"
                     continue

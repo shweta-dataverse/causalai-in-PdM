@@ -120,6 +120,13 @@ ALARMS_ONLY_AS_EFFECTS = True
 # 0.90 -> 1.00); probe 0.30 -> 0.32.
 MAX_PARENTS_CONDITIONED = 3
 
+# Full machine only: each signal may be tested against just its 10 strongest
+# earlier-in-time candidate causes (its own past always kept). Without this,
+# the full machine's final phase did not finish in five hours. Measured on the
+# subsystems, where the exact search is feasible: coolant and hydraulics give
+# identical graphs; probe 0.32 -> 0.25. Subsystems are run without it.
+FULL_MACHINE_EARLIER_CAUSES = 10
+
 # Screening before the search: each signal may be linked within the same time
 # step only to its 5 strongest same-moment partners (lagged links unscreened).
 #
