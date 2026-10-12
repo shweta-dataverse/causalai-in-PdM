@@ -3,8 +3,10 @@ Causal root cause analysis for a CNC lathe - interactive dashboard.
 
     streamlit run dashboard/app.py
 
-One page per stage of the pipeline. Each page explains what that stage does,
-why it is needed, and how to read what it produced.
+The first page, the Fault advisor, is for the engineer: what to inspect, what
+would have prevented the fault, and how far to trust it (see advisor.py).
+The other pages explain the pipeline one stage at a time, for anyone who
+wants to know how the answers are produced.
 
 Reads whatever scripts/run_pipeline.py last wrote. If nothing has been run yet
 it says so.
@@ -22,6 +24,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 sys.path.insert(0, str(PROJECT_ROOT))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+import advisor
 import charts
 import explain
 from causalpdm.pipeline import explain as whatif
@@ -75,6 +78,7 @@ if not subsystems:
 # --------------------------------------------------------------------------
 
 PAGES = [
+    "Fault advisor",
     "Overview",
     "1 - The data",
     "2 - Preparing the data",
@@ -134,7 +138,10 @@ def pick_fault(label: str = "Which fault?") -> tuple:
 # Overview
 # --------------------------------------------------------------------------
 
-if page == "Overview":
+if page == "Fault advisor":
+    advisor.render(results, subsystem, fault_tables, by_name, seconds_per_step)
+
+elif page == "Overview":
     st.title("Finding out why a machine broke")
     st.markdown(
         "**Not predicting that it will break. Working out what caused it, what "

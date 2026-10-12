@@ -11,7 +11,7 @@ mathematics.
 """
 
 # =============================================================================
-# What each signal in the coolant system actually is
+# What each signal actually is, in plain words
 # =============================================================================
 
 SIGNAL_MEANING = {
@@ -30,6 +30,38 @@ SIGNAL_MEANING = {
     "LT_A_700317":      "ALARM: lifting tank is overflowing",
     "CLT_Level_lt_Min": "Coolant tank has dropped below minimum level",
     "CLT_A_700310":     "ALARM: coolant tank below minimum fill level",
+
+    # Hydraulics - rewritten from the dataset's own descriptions.
+    "Hyd_IsEnabled":    "Hydraulics is switched on",
+    "Hyd_Pressure":     "Hydraulic pressure",
+    "Hyd_Valve_P_Up":   "Accumulator charge valve is open (building pressure)",
+    "Hyd_Filter_Ok":    "Hydraulic return-oil filter is clean",
+    "Hyd_Level_Ok":     "Hydraulic oil level is sufficient",
+    "Hyd_Pump_isOff":   "Hydraulic pump is switched off",
+    "Hyd_Pump_Ok":      "Hydraulic pump motor is healthy",
+    "Hyd_Pump_On":      "Hydraulic pump has been commanded on",
+    "Hyd_Temp_lt_70":   "Hydraulic oil is below 70 °C",
+    "Hyd_Temp_lt_80":   "Hydraulic oil is below 80 °C",
+    "Hyd_A_700202":     "ALARM: hydraulic pressure out of range",
+    "Hyd_A_700203":     "WARNING: hydraulic oil above 70 °C",
+    "Hyd_A_700204":     "ALARM: hydraulic oil above 80 °C",
+    "Hyd_A_700205":     "WARNING: hydraulic oil level close to minimum",
+    "Hyd_A_700206":     "ALARM: hydraulic oil level below minimum",
+    "Hyd_A_700207":     "ALARM: hydraulic return-oil filter clogged",
+    "Hyd_A_700208":     "ALARM: hydraulic pump motor protection tripped",
+
+    # Measuring probe - rewritten from the dataset's own descriptions.
+    "MP_Inactive":      "Measuring probe is idle (not measuring)",
+    "MPA_InitPos":      "Probe arm is in its parked position",
+    "MPA_toInitPos":    "Probe arm has been commanded to park",
+    "MPA_toWorkPos":    "Probe arm has been commanded to the measuring position",
+    "MPA_WorkPos":      "Probe arm is in the measuring position",
+    "MPC_close":        "Probe cover has been commanded to close",
+    "MPC_Closed":       "Probe cover is closed",
+    "MPC_isOpen":       "Probe cover is open",
+    "MPC_open":         "Probe cover has been commanded to open",
+    "MPA_A_701124":     "ALARM: probe arm did not reach its end position in time",
+    "MPA_A_701125":     "ALARM: probe arm reports both end positions at once",
 }
 
 

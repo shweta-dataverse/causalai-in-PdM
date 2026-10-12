@@ -258,3 +258,29 @@ def tuning_scatter(finished: pd.DataFrame) -> go.Figure:
                          xaxis_title="accuracy (F1) - further right is better",
                          yaxis_title="seconds to run - lower is better")
     return _tidy(figure, height=430)
+
+
+def alarm_risk(seconds: np.ndarray, actual: np.ndarray, with_fix: np.ndarray,
+               fix_from_second: float, title: str = "Chance that an alarm is active") -> go.Figure:
+    """
+    The engineer's main chart: how likely an alarm is at each moment, as it
+    really happened and with the chosen fix. Same run, same circumstances -
+    only the fix differs.
+    """
+    figure = go.Figure()
+    figure.add_trace(go.Scatter(
+        x=seconds, y=actual, name="what really happened", mode="lines",
+        line=dict(color=COLOURS["cause"], width=2.5, shape="hv")))
+    figure.add_trace(go.Scatter(
+        x=seconds, y=with_fix, name="with your fix", mode="lines",
+        line=dict(color=COLOURS["good"], width=2.5, dash="dash")))
+    figure.add_hline(y=0.5, line=dict(color=COLOURS["line"], dash="dot"),
+                     annotation_text="50%", annotation_position="top left")
+    figure.add_vline(x=fix_from_second, line=dict(color=COLOURS["accent"], dash="dot"),
+                     annotation_text="fix applied", annotation_position="top right")
+    figure.update_yaxes(range=[-0.03, 1.03], tickformat=".0%", title="chance of an alarm")
+    figure.update_xaxes(title="seconds into the recording")
+    figure.update_layout(title=title)
+    _tidy(figure, height=400)
+    figure.update_layout(legend=dict(y=-0.25))
+    return figure

@@ -143,6 +143,21 @@ and full are held out.
   scenarios (`results/final/held_out_by_scenario.csv`).
 - **Freeze**: `scripts/reproduce_all.py` regenerates every table into
   `results/final/`; tagged `code-freeze`.
+**Day 5 (2026-10-12) - Part D, Fault advisor:**
+
+- New first dashboard page (`dashboard/advisor.py`); the 11 stage pages stay
+  as the "how it works" section. Reads the frozen results; changes no number.
+- Sections: (1) inspect first / don't chase, with an evidence badge per
+  suspect (confirmed by the engineers' map, or learned from data only);
+  (2) live what-if - choose signals to keep healthy and when, the chance of
+  prevention and the alarm-risk curve update in about 0.2 s (200 draws);
+  (3) the recurring smallest fix for this fault type; (4) how far to trust it,
+  from the held-out results, plus a test-rig check for the defence.
+- A warning at the top when a subsystem is known to be unreliable (probe).
+- Plain-language names for every hydraulics and probe signal.
+- Checked in the browser on all three subsystems. Moving the fix after the
+  alarm drops the chance from 90% to 4% - the deadline effect, live.
+- Restart Streamlit after editing dashboard modules (no file watcher).
 - **A stale process from an earlier session** (`/tmp/run_full.py`, old code)
   had been running for 19.5 hours and would have overwritten
   `results/cache/pipeline_result_full.pkl` on finishing. Stopped.
